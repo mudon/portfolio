@@ -33,6 +33,20 @@ const pixelify = localFont({
 export const metadata: Metadata = {
   title: "Hazim's Portfolio",
   description: "Hazim's portfolio",
+  openGraph: {
+    title: "Hazim's Portfolio",
+    description: "Hazim's portfolio",
+    siteName: "Hazim Portfolio",
+    images: [
+      {
+        url: "/metadata-images/my-website.png",
+        width: 1200,
+        height: 630,
+        alt: "Hazim's Portfolio Preview",
+      },
+    ],
+    type: "website",
+  },
 };
 
 export default function RootLayout({
