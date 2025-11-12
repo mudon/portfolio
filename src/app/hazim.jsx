@@ -5,7 +5,7 @@ import { SkeletonUtils } from 'three-stdlib'
 
 export default function Model(props) {
   const group = useRef()
-  const { scene, animations } = useGLTF('/portfolio/public/hazim/hazim.gltf')
+  const { scene, animations } = useGLTF('/portfolio/hazim/hazim.gltf')
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes } = useGraph(clone)
   const { actions } = useAnimations(animations, group)
@@ -253,4 +253,4 @@ export default function Model(props) {
   )
 }
 
-useGLTF.preload('/portfolio/public/hazim/hazim.gltf')
+useGLTF.preload('/portfolio/hazim/hazim.gltf')
