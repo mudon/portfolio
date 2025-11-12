@@ -36,17 +36,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hazim's Portfolio",
     description: "Hazim's portfolio",
-    siteName: "Hazim Portfolio",
+    url: "https://mudon.github.io/portfolio/", // replace with your live domain
     images: [
       {
-        url: "/metadata-images/my-website.png",
+        url: "https://mudon.github.io/portfolio/metadata-images/my-website.png", // replace with your image
         width: 1200,
         height: 630,
-        alt: "Hazim's Portfolio Preview",
+        alt: "Hazim's Portfolio",
       },
     ],
-    type: "website",
-  },
+  }
 };
 
 export default function RootLayout({
