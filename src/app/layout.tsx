@@ -45,6 +45,13 @@ export const metadata: Metadata = {
         alt: "Hazim's Portfolio",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@yourTwitterHandle", // optional
+    title: "Hazim's Portfolio",
+    description: "Hazim's portfolio",
+    images: ["https://mudon.github.io/portfolio/metadata-images/my-website.png"],
   }
 };
 
