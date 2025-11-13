@@ -1075,8 +1075,7 @@ export default function Portfolio() {
                 <Wrench className="w-12 h-12 text-fuchsia-400 mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-2xl font-bold mb-4 text-white">Mechanical Engineering</h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Specialized in mechatronics, thermal systems, and manufacturing automation. 
-                  From CAD design to prototyping, I bring concepts to life with precision engineering.
+                  Apply core mechanical engineering principles in the design, analysis, and improvement of systems and processes to enhance performance, reliability, and efficiency.
                 </p>
               </div>
             </div>
@@ -1097,7 +1096,7 @@ export default function Portfolio() {
             {[
               { title: 'Software Development', skills: skills.software, color: 'violet' },
               { title: 'Mechanical Engineering', skills: skills.mechanical, color: 'fuchsia' },
-              { title: 'Automation', skills: skills.tools, color: 'fuchsia' },
+              { title: 'Other Tools/Hardware', skills: skills.tools, color: 'fuchsia' },
             ].map((category, index) => (
               <div key={index} className="skill-card">
                 <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
