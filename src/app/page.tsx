@@ -713,7 +713,7 @@ export default function Portfolio() {
       ]
     },
     {
-      title: 'Langgraph Basic Tree Structure',
+      title: 'Ai agent using langgraph',
       category: 'AI Agent',
       description: 'Created a foundational AI agent using Langgraph for structured task execution.',
       tech: ['Python', 'Langgraph'],
