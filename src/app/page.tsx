@@ -300,6 +300,21 @@ export default function Portfolio() {
     currentIndex: 0
   });
   
+  // Lazy loading states
+  const [visibleSections, setVisibleSections] = useState<{
+    about: boolean;
+    skills: boolean;
+    experience: boolean;
+    projects: boolean;
+    contact: boolean;
+  }>({
+    about: false,
+    skills: false,
+    experience: false,
+    projects: false,
+    contact: false
+  });
+  
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const aboutRef = useRef<HTMLDivElement>(null);
@@ -310,45 +325,99 @@ export default function Portfolio() {
   const timelineItemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const rotatingWords: string[] = ['secure', 'modern', 'scalable', 'elegant', 'powerful'];
 
-    // Scroll functions that work immediately
+  // Scroll functions that work immediately
   const scrollToProjects = () => {
-    if (projectsRef.current) {
-      projectsRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    } else {
-      // Fallback: scroll to approximate position
-      const projectsSection = document.querySelector('[data-section="projects"]');
-      if (projectsSection) {
-        projectsSection.scrollIntoView({ 
+    // Load all sections up to projects
+    setVisibleSections(prev => ({ 
+      ...prev, 
+      about: true,
+      skills: true,
+      experience: true,
+      projects: true 
+    }));
+    
+    // Wait longer to ensure all sections render
+    setTimeout(() => {
+      if (projectsRef.current) {
+        projectsRef.current.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
       }
-    }
+    }, 300);
   };
 
   const scrollToContact = () => {
-    if (contactRef.current) {
-      contactRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    } else {
-      // Fallback: scroll to approximate position
-      const contactSection = document.querySelector('[data-section="contact"]');
-      if (contactSection) {
-        contactSection.scrollIntoView({ 
+    // Load all sections including contact
+    setVisibleSections(prev => ({ 
+      ...prev, 
+      about: true,
+      skills: true,
+      experience: true,
+      projects: true,
+      contact: true 
+    }));
+    
+    // Wait longer to ensure all sections render
+    setTimeout(() => {
+      if (contactRef.current) {
+        contactRef.current.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
       }
-    }
+    }, 300);
   };
 
-  // GSAP Animations
+  // Intersection Observer for lazy loading sections
   useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '100px', // Load 100px before section is visible
+      threshold: 0.01
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const sectionName = entry.target.getAttribute('data-section');
+          if (sectionName) {
+            setVisibleSections(prev => ({ ...prev, [sectionName]: true }));
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    // Observe all sections
+    const sections = [
+      { ref: aboutRef, name: 'about' },
+      { ref: skillsRef, name: 'skills' },
+      { ref: experienceRef, name: 'experience' },
+      { ref: projectsRef, name: 'projects' },
+      { ref: contactRef, name: 'contact' }
+    ];
+
+    sections.forEach(({ ref }) => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => {
+      sections.forEach(({ ref }) => {
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      });
+    };
+  }, []);
+
+  // GSAP Animations - only run on visible sections
+  useEffect(() => {
+    if (!visibleSections.about) return;
+
     // Hero section animations
     const tl = gsap.timeline();
     
@@ -384,6 +453,41 @@ export default function Portfolio() {
       }
     );
 
+    // Magnetic button effect
+    const buttons = document.querySelectorAll('.magnetic-button');
+    buttons.forEach(button => {
+      button.addEventListener('mousemove', (e: any) => {
+        const rect = button.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        gsap.to(button, {
+          x: (x - rect.width / 2) * 0.2,
+          y: (y - rect.height / 2) * 0.2,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+      });
+      
+      button.addEventListener('mouseleave', () => {
+        gsap.to(button, {
+          x: 0,
+          y: 0,
+          duration: 0.6,
+          ease: 'elastic.out(1, 0.5)'
+        });
+      });
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, [visibleSections.about]);
+
+  // Skills animations
+  useEffect(() => {
+    if (!visibleSections.skills) return;
+
     gsap.fromTo('.skill-card',
       { opacity: 0, scale: 0.8, y: 50 },
       {
@@ -401,6 +505,15 @@ export default function Portfolio() {
         }
       }
     );
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, [visibleSections.skills]);
+
+  // Projects animations
+  useEffect(() => {
+    if (!visibleSections.projects) return;
 
     gsap.fromTo('.project-card',
       { opacity: 0, y: 80, rotationX: 15 },
@@ -420,7 +533,15 @@ export default function Portfolio() {
       }
     );
 
-    // Enhanced Timeline animations
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, [visibleSections.projects]);
+
+  // Experience timeline animations
+  useEffect(() => {
+    if (!visibleSections.experience) return;
+
     timelineItemsRef.current.forEach((item, index) => {
       if (!item) return;
 
@@ -493,36 +614,10 @@ export default function Portfolio() {
       });
     });
 
-    // Magnetic button effect
-    const buttons = document.querySelectorAll('.magnetic-button');
-    buttons.forEach(button => {
-      button.addEventListener('mousemove', (e: any) => {
-        const rect = button.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        gsap.to(button, {
-          x: (x - rect.width / 2) * 0.2,
-          y: (y - rect.height / 2) * 0.2,
-          duration: 0.3,
-          ease: 'power2.out'
-        });
-      });
-      
-      button.addEventListener('mouseleave', () => {
-        gsap.to(button, {
-          x: 0,
-          y: 0,
-          duration: 0.6,
-          ease: 'elastic.out(1, 0.5)'
-        });
-      });
-    });
-
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, []);
+  }, [visibleSections.experience]);
 
   useEffect(() => {
     const typingSpeed = isDeleting ? 50 : 100;
@@ -1052,337 +1147,357 @@ export default function Portfolio() {
       </section>
 
       {/* About Section */}
-      <section ref={aboutRef} className="about-section py-32 px-6 relative">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-5xl font-bold mb-16 text-center">
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-              About Me
-            </span>
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
-                <Code className="w-12 h-12 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-2xl font-bold mb-4 text-white">Software Engineering</h3>
-                <p className="text-slate-400 leading-relaxed">
-                  Experienced in full-stack development and embedded systems. 
-                  I build scalable applications and intelligent systems that solve real-world problems.
-                </p>
+      <section ref={aboutRef} data-section="about" className="about-section py-32 px-6 relative">
+        {visibleSections.about ? (
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-5xl font-bold mb-16 text-center">
+              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                About Me
+              </span>
+            </h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
+                  <Code className="w-12 h-12 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-2xl font-bold mb-4 text-white">Software Engineering</h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    Experienced in full-stack development and embedded systems. 
+                    I build scalable applications and intelligent systems that solve real-world problems.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
-                <Wrench className="w-12 h-12 text-fuchsia-400 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-2xl font-bold mb-4 text-white">Mechanical Engineering</h3>
-                <p className="text-slate-400 leading-relaxed">
-                  Apply core mechanical engineering principles in the design, analysis, and improvement of systems and processes to enhance performance, reliability, and efficiency.
-                </p>
+              <div>
+                <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
+                  <Wrench className="w-12 h-12 text-fuchsia-400 mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-2xl font-bold mb-4 text-white">Mechanical Engineering</h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    Apply core mechanical engineering principles in the design, analysis, and improvement of systems and processes to enhance performance, reliability, and efficiency.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="h-96"></div>
+        )}
       </section>
 
       {/* Skills Section */}
-      <section ref={skillsRef} className="skills-section py-32 px-6 relative">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl font-bold mb-16 text-center">
-            <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              Skills & Expertise
-            </span>
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { title: 'Software Development', skills: skills.software, color: 'violet' },
-              { title: 'Mechanical Engineering', skills: skills.mechanical, color: 'fuchsia' },
-              { title: 'Other Tools/Hardware', skills: skills.tools, color: 'fuchsia' },
-            ].map((category, index) => (
-              <div key={index} className="skill-card">
-                <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
-                  <h3 className={`text-2xl font-bold mb-6 text-${category.color}-400`}>
-                    {category.title}
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {category.skills.map((skill, i) => (
-                      <span 
-                        key={i} 
-                        className="dark-glass px-4 py-2 rounded-full text-sm text-slate-300 hover:bg-white/10 transition-all duration-300 hover:scale-105"
-                        style={{ animationDelay: `${i * 0.1}s` }}
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Work Experience Section - Enhanced */}
-      <section ref={experienceRef} className="py-32 px-6 relative">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-5xl font-bold mb-16 text-center">
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-              Work Experience
-            </span>
-          </h2>
-          
-          <div className="relative" ref={timelineRef}>
-            {/* Enhanced Timeline Line */}
-            <div className="absolute left-8 top-0 bottom-0 w-1 timeline-line rounded-full transform origin-top transition-all duration-1000 ease-out" 
-                 style={{ transform: `scaleY(${timelineHeight / 100})` }} />
+      <section ref={skillsRef} data-section="skills" className="skills-section py-32 px-6 relative">
+        {visibleSections.skills ? (
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-bold mb-16 text-center">
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                Skills & Expertise
+              </span>
+            </h2>
             
-            <div className="space-y-16">
-              {experiences.map((exp, i) => {
-                const colorClasses = getColorClasses(exp.color);
-                
-                return (
-                  <div 
-                    key={i} 
-                    ref={el => {timelineItemsRef.current[i] = el}}
-                    className="relative pl-20 timeline-item group"
-                  >
-                    {/* Enhanced Timeline Dot */}
-                    <div 
-                      className={`absolute left-6 top-8 w-6 h-6 rounded-full timeline-dot ${colorClasses.dot} border-2 border-slate-900 transition-all duration-500 group-hover:scale-125 group-hover:animate-pulse`}
-                      style={{ 
-                        color: exp.color === 'violet' ? '#8b5cf6' : 
-                              exp.color === 'fuchsia' ? '#d946ef' : '#06b6d4'
-                      }}
-                    />
-                    
-                    {/* Enhanced Content Card */}
-                    <div 
-                      className={`dark-glass rounded-3xl p-8 transition-all duration-500 hover:scale-[1.02] relative overflow-hidden group/card bg-gradient-to-br ${colorClasses.gradient}`}
-                    >
-                      {/* Animated gradient overlay */}
-                      <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/5 to-transparent" />
-                      
-                      <div className="relative z-10">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Briefcase 
-                                className={`w-6 h-6 ${colorClasses.text} transition-transform duration-300 group-hover:scale-110`}
-                              />
-                              <h3 className="text-2xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
-                                {exp.position}
-                              </h3>
-                            </div>
-                            <div 
-                              className={`text-xl font-semibold mb-4 inline-block px-4 py-2 rounded-full dark-glass ${colorClasses.text} border ${colorClasses.glow} transition-all duration-300 group-hover:scale-105`}
-                            >
-                              {exp.company}
-                            </div>
-                            <p className="text-slate-400 mb-6 leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
-                              {exp.description}
-                            </p>
-                          </div>
-                          <div className="md:ml-8 md:text-right flex-shrink-0 space-y-2">
-                            <div className="dark-glass px-4 py-2 rounded-full inline-flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
-                              <Calendar className="w-4 h-4" />
-                              <span className="text-sm font-medium">{exp.duration}</span>
-                            </div>
-                            <div className="dark-glass px-4 py-2 rounded-full inline-flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
-                              <MapPinIcon className="w-4 h-4" />
-                              <span className="text-sm">{exp.location}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-8 pt-6 border-t border-slate-700/50">
-                          <h4 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wide group-hover:text-slate-400 transition-colors duration-300">
-                            Key Achievements
-                          </h4>
-                          <ul className="space-y-3">
-                            {exp.achievements.map((achievement, j) => (
-                              <li 
-                                key={j} 
-                                className="flex items-start gap-3 achievement-item group/achievement"
-                              >
-                                <div 
-                                  className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 transition-all duration-300 group-hover/achievement:scale-150 ${colorClasses.dot}`}
-                                />
-                                <span className="text-slate-400 leading-relaxed group-hover/achievement:text-slate-300 transition-all duration-300 group-hover/achievement:translate-x-1">
-                                  {achievement}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Section with GIFs */}
-      <section ref={projectsRef} className="projects-section py-32 px-6 relative">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl font-bold mb-16 text-center">
-            <span className="bg-gradient-to-r from-fuchsia-400 to-purple-400 bg-clip-text text-transparent">
-              Featured Projects
-            </span>
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            {projects.map((project, i) => (
-              <div key={i} className="project-card">
-                <div className={`dark-glass bg-gradient-to-br ${project.gradient} rounded-3xl p-8 transition-all duration-500 hover:scale-105 h-full flex flex-col group`}>
-                  {/* Project Content - At the top */}
-                  <div className="flex-grow">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <div className="text-sm text-violet-400 mb-2 font-medium">{project.category}</div>
-                        <h3 className="text-2xl font-bold text-white">{project.title}</h3>
-                      </div>
-                      <ExternalLink className="w-5 h-5 text-slate-400 hover:text-violet-400 transition-colors cursor-pointer group-hover:scale-110" />
-                    </div>
-                    <p className="text-slate-400 mb-6 leading-relaxed">{project.description}</p>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { title: 'Software Development', skills: skills.software, color: 'violet' },
+                { title: 'Mechanical Engineering', skills: skills.mechanical, color: 'fuchsia' },
+                { title: 'Other Tools/Hardware', skills: skills.tools, color: 'fuchsia' },
+              ].map((category, index) => (
+                <div key={index} className="skill-card">
+                  <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
+                    <h3 className={`text-2xl font-bold mb-6 text-${category.color}-400`}>
+                      {category.title}
+                    </h3>
                     <div className="flex flex-wrap gap-2">
-                      {project.tech.map((tech, j) => (
-                        <span key={j} className="dark-glass px-3 py-1 rounded-full text-xs text-slate-300 hover:scale-105 transition-transform">
-                          {tech}
+                      {category.skills.map((skill, i) => (
+                        <span 
+                          key={i} 
+                          className="dark-glass px-4 py-2 rounded-full text-sm text-slate-300 hover:bg-white/10 transition-all duration-300 hover:scale-105"
+                          style={{ animationDelay: `${i * 0.1}s` }}
+                        >
+                          {skill}
                         </span>
                       ))}
                     </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="h-96"></div>
+        )}
+      </section>
 
-                  {/* GIF Section - At the bottom */}
-                  <div className="mt-8">
-                    <ProjectGifSection 
-                      gifs={project.gifs} 
-                      projectTitle={project.title}
-                      onGifClick={(index) => openGifModal(project.gifs, index)}
-                    />
+      {/* Work Experience Section */}
+      <section ref={experienceRef} data-section="experience" className="py-32 px-6 relative">
+        {visibleSections.experience ? (
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-5xl font-bold mb-16 text-center">
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                Work Experience
+              </span>
+            </h2>
+            
+            <div className="relative" ref={timelineRef}>
+              {/* Enhanced Timeline Line */}
+              <div className="absolute left-8 top-0 bottom-0 w-1 timeline-line rounded-full transform origin-top transition-all duration-1000 ease-out" 
+                   style={{ transform: `scaleY(${timelineHeight / 100})` }} />
+              
+              <div className="space-y-16">
+                {experiences.map((exp, i) => {
+                  const colorClasses = getColorClasses(exp.color);
+                  
+                  return (
+                    <div 
+                      key={i} 
+                      ref={el => {timelineItemsRef.current[i] = el}}
+                      className="relative pl-20 timeline-item group"
+                    >
+                      {/* Enhanced Timeline Dot */}
+                      <div 
+                        className={`absolute left-6 top-8 w-6 h-6 rounded-full timeline-dot ${colorClasses.dot} border-2 border-slate-900 transition-all duration-500 group-hover:scale-125 group-hover:animate-pulse`}
+                        style={{ 
+                          color: exp.color === 'violet' ? '#8b5cf6' : 
+                                exp.color === 'fuchsia' ? '#d946ef' : '#06b6d4'
+                        }}
+                      />
+                      
+                      {/* Enhanced Content Card */}
+                      <div 
+                        className={`dark-glass rounded-3xl p-8 transition-all duration-500 hover:scale-[1.02] relative overflow-hidden group/card bg-gradient-to-br ${colorClasses.gradient}`}
+                      >
+                        {/* Animated gradient overlay */}
+                        <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/5 to-transparent" />
+                        
+                        <div className="relative z-10">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <Briefcase 
+                                  className={`w-6 h-6 ${colorClasses.text} transition-transform duration-300 group-hover:scale-110`}
+                                />
+                                <h3 className="text-2xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
+                                  {exp.position}
+                                </h3>
+                              </div>
+                              <div 
+                                className={`text-xl font-semibold mb-4 inline-block px-4 py-2 rounded-full dark-glass ${colorClasses.text} border ${colorClasses.glow} transition-all duration-300 group-hover:scale-105`}
+                              >
+                                {exp.company}
+                              </div>
+                              <p className="text-slate-400 mb-6 leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
+                                {exp.description}
+                              </p>
+                            </div>
+                            <div className="md:ml-8 md:text-right flex-shrink-0 space-y-2">
+                              <div className="dark-glass px-4 py-2 rounded-full inline-flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
+                                <Calendar className="w-4 h-4" />
+                                <span className="text-sm font-medium">{exp.duration}</span>
+                              </div>
+                              <div className="dark-glass px-4 py-2 rounded-full inline-flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
+                                <MapPinIcon className="w-4 h-4" />
+                                <span className="text-sm">{exp.location}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-8 pt-6 border-t border-slate-700/50">
+                            <h4 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wide group-hover:text-slate-400 transition-colors duration-300">
+                              Key Achievements
+                            </h4>
+                            <ul className="space-y-3">
+                              {exp.achievements.map((achievement, j) => (
+                                <li 
+                                  key={j} 
+                                  className="flex items-start gap-3 achievement-item group/achievement"
+                                >
+                                  <div 
+                                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 transition-all duration-300 group-hover/achievement:scale-150 ${colorClasses.dot}`}
+                                  />
+                                  <span className="text-slate-400 leading-relaxed group-hover/achievement:text-slate-300 transition-all duration-300 group-hover/achievement:translate-x-1">
+                                    {achievement}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="h-96"></div>
+        )}
+      </section>
+
+      {/* Projects Section */}
+      <section ref={projectsRef} data-section="projects" className="projects-section py-32 px-6 relative">
+        {visibleSections.projects ? (
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-bold mb-16 text-center">
+              <span className="bg-gradient-to-r from-fuchsia-400 to-purple-400 bg-clip-text text-transparent">
+                Featured Projects
+              </span>
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              {projects.map((project, i) => (
+                <div key={i} className="project-card">
+                  <div className={`dark-glass bg-gradient-to-br ${project.gradient} rounded-3xl p-8 transition-all duration-500 hover:scale-105 h-full flex flex-col group`}>
+                    {/* Project Content - At the top */}
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <div className="text-sm text-violet-400 mb-2 font-medium">{project.category}</div>
+                          <h3 className="text-2xl font-bold text-white">{project.title}</h3>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-slate-400 hover:text-violet-400 transition-colors cursor-pointer group-hover:scale-110" />
+                      </div>
+                      <p className="text-slate-400 mb-6 leading-relaxed">{project.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {project.tech.map((tech, j) => (
+                          <span key={j} className="dark-glass px-3 py-1 rounded-full text-xs text-slate-300 hover:scale-105 transition-transform">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* GIF Section - At the bottom */}
+                    <div className="mt-8">
+                      <ProjectGifSection 
+                        gifs={project.gifs} 
+                        projectTitle={project.title}
+                        onGifClick={(index) => openGifModal(project.gifs, index)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="h-96"></div>
+        )}
       </section>
 
       {/* Contact Section */}
-      <section ref={contactRef} className="py-32 px-6 relative">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl font-bold mb-8 text-center">
-            <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
-              Let's Connect
-            </span>
-          </h2>
-          <p className="text-xl text-slate-400 mb-12 text-center">
-            Interested in collaboration or have a project in mind? Let's talk!
-          </p>
+      <section ref={contactRef} data-section="contact" className="py-32 px-6 relative">
+        {visibleSections.contact ? (
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-bold mb-8 text-center">
+              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                Let's Connect
+              </span>
+            </h2>
+            <p className="text-xl text-slate-400 mb-12 text-center">
+              Interested in collaboration or have a project in mind? Let's talk!
+            </p>
 
-          {/* Contact Info */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {[
-              { icon: Mail, label: 'Email', value: 'muhammadhazim57@gmail.com',  href: 'https://mail.google.com/mail/?view=cm&to=muhammadhazim57@gmail.com', color: 'violet' },
-              { icon: Phone, label: 'Phone', value: '+60 14-5197269', href: 'https://wa.me/60145197269', color: 'fuchsia' },
-              { icon: MapPin, label: 'Location', value: 'Penang, Malaysia', color: 'cyan' }
-            ].map((item, i) => (
-              <a
-                key={i}
-                href={item.href}
-                className="dark-glass flex flex-col items-center p-6 rounded-3xl transition-all duration-300 hover:scale-105 magnetic-button group"
-              >
-                <item.icon className={`w-8 h-8 text-${item.color}-400 mb-3 group-hover:scale-110 transition-transform`} />
-                <span className="text-sm text-slate-500 mb-1">{item.label}</span>
-                <span className="text-slate-300 text-sm text-center">{item.value}</span>
-              </a>
-            ))}
-          </div>
-
-          {/* Contact Form */}
-          <div className="contact-form">
-            <div className="dark-glass rounded-3xl p-8">
-              <h3 className="text-2xl font-bold mb-6 text-center text-white">Send Me a Message</h3>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {[
-                  { id: 'name', label: 'Your Name', type: 'text', placeholder: 'Enter your name' },
-                  { id: 'email', label: 'Your Email', type: 'email', placeholder: 'your.email@example.com' },
-                  { id: 'message', label: 'Message', type: 'textarea', placeholder: 'Tell me about your project or inquiry...' }
-                ].map((field) => (
-                  <div key={field.id}>
-                    <label htmlFor={field.id} className="block text-sm font-medium text-slate-400 mb-2">
-                      {field.label}
-                    </label>
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        id={field.id}
-                        name={field.id}
-                        value={formData[field.id as keyof FormData]}
-                        onChange={handleChange}
-                        required
-                        rows={5}
-                        className="dark-glass w-full px-4 py-3 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-500 transition-all resize-none focus:ring-2 focus:ring-violet-500/50"
-                        placeholder={field.placeholder}
-                      />
-                    ) : (
-                      <input
-                        type={field.type}
-                        id={field.id}
-                        name={field.id}
-                        value={formData[field.id as keyof FormData]}
-                        onChange={handleChange}
-                        required
-                        className="dark-glass w-full px-4 py-3 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-500 transition-all focus:ring-2 focus:ring-violet-500/50"
-                        placeholder={field.placeholder}
-                      />
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="submit"
-                  disabled={formStatus === 'sending'}
-                  className="w-full px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full font-semibold hover:shadow-lg hover:shadow-violet-500/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 animate-glow"
+            {/* Contact Info */}
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              {[
+                { icon: Mail, label: 'Email', value: 'muhammadhazim57@gmail.com',  href: 'https://mail.google.com/mail/?view=cm&to=muhammadhazim57@gmail.com', color: 'violet' },
+                { icon: Phone, label: 'Phone', value: '+60 14-5197269', href: 'https://wa.me/60145197269', color: 'fuchsia' },
+                { icon: MapPin, label: 'Location', value: 'Penang, Malaysia', color: 'cyan' }
+              ].map((item, i) => (
+                <a
+                  key={i}
+                  href={item.href}
+                  className="dark-glass flex flex-col items-center p-6 rounded-3xl transition-all duration-300 hover:scale-105 magnetic-button group"
                 >
-                  {formStatus === 'sending' ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Sending...
-                    </>
-                  ) : formStatus === 'sent' ? (
-                    <>
-                      <span>✓</span> Message Sent!
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Send Message
-                    </>
-                  )}
-                </button>
-              </form>
+                  <item.icon className={`w-8 h-8 text-${item.color}-400 mb-3 group-hover:scale-110 transition-transform`} />
+                  <span className="text-sm text-slate-500 mb-1">{item.label}</span>
+                  <span className="text-slate-300 text-sm text-center">{item.value}</span>
+                </a>
+              ))}
+            </div>
+
+            {/* Contact Form */}
+            <div className="contact-form">
+              <div className="dark-glass rounded-3xl p-8">
+                <h3 className="text-2xl font-bold mb-6 text-center text-white">Send Me a Message</h3>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {[
+                    { id: 'name', label: 'Your Name', type: 'text', placeholder: 'Enter your name' },
+                    { id: 'email', label: 'Your Email', type: 'email', placeholder: 'your.email@example.com' },
+                    { id: 'message', label: 'Message', type: 'textarea', placeholder: 'Tell me about your project or inquiry...' }
+                  ].map((field) => (
+                    <div key={field.id}>
+                      <label htmlFor={field.id} className="block text-sm font-medium text-slate-400 mb-2">
+                        {field.label}
+                      </label>
+                      {field.type === 'textarea' ? (
+                        <textarea
+                          id={field.id}
+                          name={field.id}
+                          value={formData[field.id as keyof FormData]}
+                          onChange={handleChange}
+                          required
+                          rows={5}
+                          className="dark-glass w-full px-4 py-3 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-500 transition-all resize-none focus:ring-2 focus:ring-violet-500/50"
+                          placeholder={field.placeholder}
+                        />
+                      ) : (
+                        <input
+                          type={field.type}
+                          id={field.id}
+                          name={field.id}
+                          value={formData[field.id as keyof FormData]}
+                          onChange={handleChange}
+                          required
+                          className="dark-glass w-full px-4 py-3 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-500 transition-all focus:ring-2 focus:ring-violet-500/50"
+                          placeholder={field.placeholder}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="submit"
+                    disabled={formStatus === 'sending'}
+                    className="w-full px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full font-semibold hover:shadow-lg hover:shadow-violet-500/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 animate-glow"
+                  >
+                    {formStatus === 'sending' ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : formStatus === 'sent' ? (
+                      <>
+                        <span>✓</span> Message Sent!
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Send Message
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex gap-6 justify-center mt-12">
+              {[
+                { icon: Github, href: 'https://github.com', color: 'hover:text-violet-400' },
+                { icon: Linkedin, href: 'https://linkedin.com/in/muhammad-hazim-hishamuddin-bin-hishamuddin-71234212b', color: 'hover:text-cyan-400' }
+              ].map((social, i) => (
+                <a
+                  key={i}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`dark-glass p-4 rounded-2xl hover:scale-110 transition-all duration-300 ${social.color}`}
+                >
+                  <social.icon className="w-6 h-6" />
+                </a>
+              ))}
             </div>
           </div>
-
-          {/* Social Links */}
-          <div className="flex gap-6 justify-center mt-12">
-            {[
-              { icon: Github, href: 'https://github.com', color: 'hover:text-violet-400' },
-              { icon: Linkedin, href: 'https://linkedin.com/in/muhammad-hazim-hishamuddin-bin-hishamuddin-71234212b', color: 'hover:text-cyan-400' }
-            ].map((social, i) => (
-              <a
-                key={i}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`dark-glass p-4 rounded-2xl hover:scale-110 transition-all duration-300 ${social.color}`}
-              >
-                <social.icon className="w-6 h-6" />
-              </a>
-            ))}
-          </div>
-        </div>
+        ) : (
+          <div className="h-96"></div>
+        )}
       </section>
 
       {/* Footer */}
