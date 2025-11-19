@@ -720,7 +720,7 @@ export default function Portfolio() {
       gradient: 'from-indigo-900/20 via-purple-900/20 to-violet-900/20',
       gifs: [
         {
-          url: 'gifs/ai-agent-structure.gif',
+          url: 'gifs/ai-agent.gif',
           alt: 'Structure of Ai agent'
         }
       ]
