@@ -355,7 +355,7 @@ const ProjectMediaSection = ({
   );
 };
 
-const useThrottledScroll = (throttleMs: number = 16) => {
+const useThrottledScroll = (throttleMs: number = 8) => {
   const [scrollY, setScrollY] = useState<number>(0);
   const scrollTimeoutRef = useRef<number | null>(null);
   const lastScrollYRef = useRef<number>(0);
@@ -386,7 +386,7 @@ const useThrottledScroll = (throttleMs: number = 16) => {
 };
 
 export default function CartoonPortfolio() {
-  const scrollY = useThrottledScroll(16);
+  const scrollY = useThrottledScroll(8);
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '' });
   const [formStatus, setFormStatus] = useState<'sending' | 'sent' | ''>('');
   const [timelineHeight, setTimelineHeight] = useState<number>(0);
@@ -534,18 +534,34 @@ export default function CartoonPortfolio() {
     return () => clearTimeout(timer);
   }, [currentText, isDeleting, currentWordIndex, rotatingWords]);
 
+  // Improved timeline animation
   useEffect(() => {
     const updateTimelineHeight = () => {
       if (timelineRef.current) {
         const timelineElement = timelineRef.current;
         const rect = timelineElement.getBoundingClientRect();
         const timelineTop = rect.top + window.scrollY;
-        const timelineFullHeight = rect.height;
+        const timelineBottom = rect.bottom + window.scrollY;
+        const timelineHeight = rect.height;
+        
+        // Calculate when timeline enters viewport
+        const viewportTop = window.scrollY;
+        const viewportBottom = window.scrollY + window.innerHeight;
+        
+        // Calculate progress based on viewport center
         const viewportCenter = window.scrollY + window.innerHeight / 2;
-        const scrollProgress = viewportCenter - timelineTop;
-        const percentage = Math.min(Math.max((scrollProgress / timelineFullHeight) * 100, 0), 100);
-
-        setTimelineHeight(percentage);
+        const timelineStart = timelineTop - window.innerHeight / 2;
+        const timelineEnd = timelineBottom - window.innerHeight / 2;
+        
+        let progress = 0;
+        
+        if (viewportCenter > timelineStart && viewportCenter < timelineEnd) {
+          progress = ((viewportCenter - timelineStart) / (timelineEnd - timelineStart)) * 100;
+        } else if (viewportCenter >= timelineEnd) {
+          progress = 100;
+        }
+        
+        setTimelineHeight(Math.min(Math.max(progress, 0), 100));
       }
     };
 
@@ -845,6 +861,11 @@ export default function CartoonPortfolio() {
           50% { opacity: 1; transform: scale(1); }
         }
         
+        @keyframes timeline-grow {
+          from { transform: scaleY(0); }
+          to { transform: scaleY(1); }
+        }
+        
         .floating-element {
           animation: float 6s ease-in-out infinite;
         }
@@ -867,6 +888,11 @@ export default function CartoonPortfolio() {
         
         .sparkle {
           animation: sparkle 2s ease-in-out infinite;
+        }
+        
+        .timeline-grow {
+          animation: timeline-grow 1.5s ease-out forwards;
+          transform-origin: top;
         }
         
         .mickey-border {
@@ -932,6 +958,8 @@ export default function CartoonPortfolio() {
           background: linear-gradient(to bottom, #FF0000, #FFD700, #FFFFFF);
           border: 3px solid #000;
           box-shadow: 4px 4px 0 #000;
+          transform-origin: top;
+          transition: transform 0.1s ease-out;
         }
         
         .mickey-timeline-dot {
@@ -939,6 +967,7 @@ export default function CartoonPortfolio() {
           box-shadow: 
             3px 3px 0 #000,
             0 0 15px currentColor;
+          transition: all 0.3s ease;
         }
         
         .mickey-dotted-border {
@@ -962,6 +991,10 @@ export default function CartoonPortfolio() {
             radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 40% 80%, rgba(255, 0, 0, 0.1) 0%, transparent 50%);
+        }
+
+        .timeline-dot-pulse {
+          animation: pulse-glow 2s ease-in-out infinite;
         }
       `}</style>
 
@@ -1203,15 +1236,19 @@ export default function CartoonPortfolio() {
             </h2>
             
             <div className="relative" ref={timelineRef}>
-              <div className="absolute left-8 top-0 bottom-0 w-3 mickey-timeline-line rounded-full" 
+              {/* Animated Timeline Line */}
+              <div 
+                className="absolute left-8 top-0 bottom-0 w-3 mickey-timeline-line rounded-full" 
                 style={{ 
                   transform: `scaleY(${timelineHeight / 100})`,
-                  transformOrigin: 'top' 
-                }} />
+                  transformOrigin: 'top'
+                }} 
+              />
               
               <div className="space-y-16">
                 {experiences.map((exp, i) => {
                   const colorClasses = getColorClasses(exp.color);
+                  const isVisible = timelineHeight > (i * (100 / experiences.length));
                   
                   return (
                     <div 
@@ -1220,10 +1257,23 @@ export default function CartoonPortfolio() {
                       className="relative pl-20"
                     >
                       <div 
-                        className={`absolute left-6 top-8 w-8 h-8 rounded-full mickey-timeline-dot ${colorClasses.dot}`}
+                        className={`absolute left-6 top-8 w-8 h-8 rounded-full mickey-timeline-dot ${colorClasses.dot} ${
+                          isVisible ? 'timeline-dot-pulse scale-110' : 'scale-90 opacity-70'
+                        } transition-all duration-500`}
+                        style={{ 
+                          transitionDelay: `${i * 200}ms`,
+                          transform: isVisible ? 'scale(1.1)' : 'scale(0.9)'
+                        }}
                       />
                       
-                      <div className="mickey-card rounded-3xl p-8">
+                      <div 
+                        className={`mickey-card rounded-3xl p-8 transition-all duration-700 ${
+                          isVisible 
+                            ? 'opacity-100 translate-y-0' 
+                            : 'opacity-0 translate-y-10'
+                        }`}
+                        style={{ transitionDelay: `${i * 300}ms` }}
+                      >
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-3">
@@ -1252,7 +1302,15 @@ export default function CartoonPortfolio() {
                           <h4 className="text-sm font-black text-yellow-400 mb-4 uppercase tracking-wide">KEY ACHIEVEMENTS</h4>
                           <ul className="space-y-3">
                             {exp.achievements.map((achievement, j) => (
-                              <li key={j} className="flex items-start gap-3">
+                              <li 
+                                key={j} 
+                                className="flex items-start gap-3 transition-all duration-500"
+                                style={{ 
+                                  transitionDelay: `${(i * 100) + (j * 100)}ms`,
+                                  opacity: isVisible ? 1 : 0,
+                                  transform: isVisible ? 'translateX(0)' : 'translateX(-20px)'
+                                }}
+                              >
                                 <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${colorClasses.dot} mickey-timeline-dot`} />
                                 <span className="text-gray-300 leading-relaxed font-bold">{achievement}</span>
                               </li>
