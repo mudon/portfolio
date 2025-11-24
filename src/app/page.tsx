@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, useRef, useCallback, ChangeEvent, FormEvent, useMemo } from 'react';
 import {
   Github, Linkedin, Mail, ExternalLink, Code, Cpu, Wrench, ChevronDown,
   Phone, MapPin, Send, Briefcase, Calendar, MapPinIcon, X, ChevronLeft, ChevronRight
@@ -23,9 +23,10 @@ interface FormData {
   message: string;
 }
 
-interface ProjectImage {
+interface ProjectMedia {
   url: string;
   alt: string;
+  type: 'video' | 'image';
 }
 
 interface Project {
@@ -34,7 +35,7 @@ interface Project {
   description: string;
   tech: string[];
   gradient: string;
-  gifs: ProjectImage[];
+  media: ProjectMedia[];
 }
 
 interface Experience {
@@ -47,27 +48,40 @@ interface Experience {
   color: 'violet' | 'fuchsia' | 'cyan';
 }
 
-// GIF Modal Component
-const GifModal = ({ 
-  gifs, 
+// Video Modal Component
+const VideoModal = ({ 
+  media, 
   initialIndex, 
   isOpen, 
   onClose 
 }: { 
-  gifs: ProjectImage[]; 
+  media: ProjectMedia[]; 
   initialIndex: number;
   isOpen: boolean; 
   onClose: () => void;
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  const nextGif = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % gifs.length);
-  }, [gifs.length]);
+  const nextMedia = useCallback(() => {
+    // Pause current video
+    const currentVideo = videoRefs.current[currentIndex];
+    if (currentVideo && media[currentIndex].type === 'video') {
+      currentVideo.pause();
+    }
+    
+    setCurrentIndex((prev) => (prev + 1) % media.length);
+  }, [media.length, currentIndex, media]);
 
-  const prevGif = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + gifs.length) % gifs.length);
-  }, [gifs.length]);
+  const prevMedia = useCallback(() => {
+    // Pause current video
+    const currentVideo = videoRefs.current[currentIndex];
+    if (currentVideo && media[currentIndex].type === 'video') {
+      currentVideo.pause();
+    }
+    
+    setCurrentIndex((prev) => (prev - 1 + media.length) % media.length);
+  }, [media.length, currentIndex, media]);
 
   useEffect(() => {
     if (isOpen) {
@@ -75,6 +89,13 @@ const GifModal = ({
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
+      // Pause all videos when modal closes
+      videoRefs.current.forEach(video => {
+        if (video) {
+          video.pause();
+          video.currentTime = 0;
+        }
+      });
     }
 
     return () => {
@@ -91,19 +112,29 @@ const GifModal = ({
           onClose();
           break;
         case 'ArrowLeft':
-          prevGif();
+          prevMedia();
           break;
         case 'ArrowRight':
-          nextGif();
+          nextMedia();
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, prevGif, nextGif, onClose]);
+  }, [isOpen, prevMedia, nextMedia, onClose]);
+
+  // Auto-play video when it becomes current
+  useEffect(() => {
+    const currentVideo = videoRefs.current[currentIndex];
+    if (currentVideo && media[currentIndex].type === 'video') {
+      currentVideo.play().catch(console.error);
+    }
+  }, [currentIndex, media]);
 
   if (!isOpen) return null;
+
+  const currentMedia = media[currentIndex];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg">
@@ -116,16 +147,16 @@ const GifModal = ({
 
       <div className="relative max-w-6xl max-h-[90vh] w-full mx-4">
         {/* Navigation Arrows */}
-        {gifs.length > 1 && (
+        {media.length > 1 && (
           <>
             <button
-              onClick={prevGif}
+              onClick={prevMedia}
               className="absolute left-4 top-1/2 -translate-y-1/2 dark-glass p-4 rounded-full hover:scale-110 transition-transform duration-300 z-10"
             >
               <ChevronLeft className="w-6 h-6 text-white" />
             </button>
             <button
-              onClick={nextGif}
+              onClick={nextMedia}
               className="absolute right-4 top-1/2 -translate-y-1/2 dark-glass p-4 rounded-full hover:scale-110 transition-transform duration-300 z-10"
             >
               <ChevronRight className="w-6 h-6 text-white" />
@@ -133,38 +164,70 @@ const GifModal = ({
           </>
         )}
 
-        {/* Main GIF */}
-        <img
-          src={gifs[currentIndex].url}
-          alt={gifs[currentIndex].alt}
-          className="w-full h-full max-h-[80vh] object-contain rounded-lg"
-        />
+        {/* Main Media */}
+        <div className="w-full h-full max-h-[80vh] flex items-center justify-center">
+          {currentMedia.type === 'video' ? (
+            <video
+              ref={el => { videoRefs.current[currentIndex] = el }}
+              src={currentMedia.url}
+              className="w-full h-full max-h-[80vh] object-contain rounded-lg"
+              controls
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <img
+              src={currentMedia.url}
+              alt={currentMedia.alt}
+              loading="lazy"
+              className="w-full h-full max-h-[80vh] object-contain rounded-lg"
+            />
+          )}
+        </div>
 
-        {/* GIF Counter */}
-        {gifs.length > 1 && (
+        {/* Media Counter */}
+        {media.length > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 dark-glass px-4 py-2 rounded-full text-white text-sm">
-            {currentIndex + 1} / {gifs.length}
+            {currentIndex + 1} / {media.length}
           </div>
         )}
 
         {/* Thumbnails */}
-        {gifs.length > 1 && (
+        {media.length > 1 && (
           <div className="flex gap-2 justify-center mt-4 overflow-x-auto py-2">
-            {gifs.map((gif, index) => (
+            {media.map((item, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentIndex(index)}
+                onClick={() => {
+                  // Pause current video
+                  const currentVideo = videoRefs.current[currentIndex];
+                  if (currentVideo && media[currentIndex].type === 'video') {
+                    currentVideo.pause();
+                  }
+                  setCurrentIndex(index);
+                }}
                 className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                   index === currentIndex 
                     ? 'border-violet-500 scale-110' 
                     : 'border-transparent hover:border-white/50'
                 }`}
               >
-                <img
-                  src={gif.url}
-                  alt={gif.alt}
-                  className="w-full h-full object-cover"
-                />
+                {item.type === 'video' ? (
+                  <video
+                    src={item.url}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={item.alt}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </button>
             ))}
           </div>
@@ -174,36 +237,70 @@ const GifModal = ({
   );
 };
 
-// Project GIF Section Component
-const ProjectGifSection = ({ 
-  gifs, 
+// Project Media Section Component
+const ProjectMediaSection = ({ 
+  media, 
   projectTitle,
-  onGifClick 
+  onMediaClick 
 }: { 
-  gifs: ProjectImage[]; 
+  media: ProjectMedia[]; 
   projectTitle: string;
-  onGifClick: (index: number) => void;
+  onMediaClick: (index: number) => void;
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  const nextGif = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % gifs.length);
-  }, [gifs.length]);
-
-  const prevGif = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + gifs.length) % gifs.length);
-  }, [gifs.length]);
-
-  // Auto-slide effect
-  useEffect(() => {
-    if (gifs.length <= 1 || isHovered) return;
+  const nextMedia = useCallback(() => {
+    // Pause current video
+    const currentVideo = videoRefs.current[currentIndex];
+    if (currentVideo && media[currentIndex].type === 'video') {
+      currentVideo.pause();
+      currentVideo.currentTime = 0;
+    }
     
-    const interval = setInterval(nextGif, 4000);
-    return () => clearInterval(interval);
-  }, [gifs.length, nextGif, isHovered]);
+    setCurrentIndex((prev) => (prev + 1) % media.length);
+  }, [media.length, currentIndex, media]);
 
-  if (gifs.length === 0) return null;
+  const prevMedia = useCallback(() => {
+    // Pause current video
+    const currentVideo = videoRefs.current[currentIndex];
+    if (currentVideo && media[currentIndex].type === 'video') {
+      currentVideo.pause();
+      currentVideo.currentTime = 0;
+    }
+    
+    setCurrentIndex((prev) => (prev - 1 + media.length) % media.length);
+  }, [media.length, currentIndex, media]);
+
+  // Auto-slide effect for images only
+  useEffect(() => {
+    if (media.length <= 1 || isHovered) return;
+    
+    const currentItem = media[currentIndex];
+    // Only auto-slide if it's an image, not a video
+    if (currentItem.type === 'image') {
+      const interval = setInterval(nextMedia, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [media.length, nextMedia, isHovered, currentIndex, media]);
+
+  // Play video on hover
+  useEffect(() => {
+    const currentVideo = videoRefs.current[currentIndex];
+    if (currentVideo && media[currentIndex].type === 'video') {
+      if (isHovered) {
+        currentVideo.play().catch(console.error);
+      } else {
+        currentVideo.pause();
+        currentVideo.currentTime = 0;
+      }
+    }
+  }, [isHovered, currentIndex, media]);
+
+  if (media.length === 0) return null;
+
+  const currentMedia = media[currentIndex];
 
   return (
     <div 
@@ -212,14 +309,26 @@ const ProjectGifSection = ({
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onGifClick(currentIndex)}
+      onClick={() => onMediaClick(currentIndex)}
     >
-      {/* Main GIF */}
-      <img
-        src={gifs[currentIndex].url}
-        alt={gifs[currentIndex].alt}
-        className="w-full h-full object-cover transition-all duration-500"
-      />
+      {/* Main Media */}
+      {currentMedia.type === 'video' ? (
+        <video
+          ref={el => { videoRefs.current[currentIndex] = el }}
+          src={currentMedia.url}
+          className="w-full h-full object-cover transition-all duration-500"
+          muted
+          loop
+          playsInline
+        />
+      ) : (
+        <img
+          src={currentMedia.url}
+          alt={currentMedia.alt}
+          loading="lazy"
+          className="w-full h-full object-cover transition-all duration-500"
+        />
+      )}
       
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
@@ -231,12 +340,12 @@ const ProjectGifSection = ({
       </div>
       
       {/* Navigation Arrows */}
-      {gifs.length > 1 && (
+      {media.length > 1 && (
         <>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              prevGif();
+              prevMedia();
             }}
             className="absolute left-2 top-1/2 -translate-y-1/2 dark-glass p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
           >
@@ -245,7 +354,7 @@ const ProjectGifSection = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              nextGif();
+              nextMedia();
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 dark-glass p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
           >
@@ -255,13 +364,19 @@ const ProjectGifSection = ({
       )}
       
       {/* Dots Indicator */}
-      {gifs.length > 1 && (
+      {media.length > 1 && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-          {gifs.map((_, index) => (
+          {media.map((_, index) => (
             <button
               key={index}
               onClick={(e) => {
                 e.stopPropagation();
+                // Pause current video
+                const currentVideo = videoRefs.current[currentIndex];
+                if (currentVideo && media[currentIndex].type === 'video') {
+                  currentVideo.pause();
+                  currentVideo.currentTime = 0;
+                }
                 setCurrentIndex(index);
               }}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
@@ -274,16 +389,49 @@ const ProjectGifSection = ({
         </div>
       )}
 
-      {/* GIF Badge */}
+      {/* Media Badge */}
       <div className="absolute top-2 right-2 dark-glass px-2 py-1 rounded-full">
-        <span className="text-xs text-violet-300 font-medium">GIF</span>
+        <span className="text-xs text-violet-300 font-medium">
+          {currentMedia.type === 'video' ? 'VIDEO' : 'IMAGE'}
+        </span>
       </div>
     </div>
   );
 };
 
-export default function Portfolio() {
+// Fix 1: Initialize useRef with null and use number instead of NodeJS.Timeout for browser compatibility
+const useThrottledScroll = (throttleMs: number = 16) => {
   const [scrollY, setScrollY] = useState<number>(0);
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const lastScrollYRef = useRef<number>(0);
+
+  useEffect(() => {
+    const handleScroll = (): void => {
+      const currentScrollY = window.scrollY;
+      lastScrollYRef.current = currentScrollY;
+
+      if (!scrollTimeoutRef.current) {
+        scrollTimeoutRef.current = window.setTimeout(() => {
+          setScrollY(lastScrollYRef.current);
+          scrollTimeoutRef.current = null;
+        }, throttleMs);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [throttleMs]);
+
+  return scrollY;
+};
+
+export default function Portfolio() {
+  const scrollY = useThrottledScroll(16);
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '' });
   const [formStatus, setFormStatus] = useState<'sending' | 'sent' | ''>('');
   const [timelineHeight, setTimelineHeight] = useState<number>(0);
@@ -292,11 +440,11 @@ export default function Portfolio() {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    gifs: ProjectImage[];
+    media: ProjectMedia[];
     currentIndex: number;
   }>({
     isOpen: false,
-    gifs: [],
+    media: [],
     currentIndex: 0
   });
   
@@ -323,11 +471,24 @@ export default function Portfolio() {
   const projectsRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const timelineItemsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const rotatingWords: string[] = ['secure', 'modern', 'scalable', 'elegant', 'powerful'];
+  
+  // GSAP animation refs to track instances for cleanup
+  const animationRefs = useRef<{
+    hero: gsap.core.Timeline | null;
+    skills: gsap.core.Tween[];
+    projects: gsap.core.Tween[];
+    experience: gsap.core.Tween[];
+  }>({
+    hero: null,
+    skills: [],
+    projects: [],
+    experience: []
+  });
 
-  // Scroll functions that work immediately
-  const scrollToProjects = () => {
-    // Load all sections up to projects
+  const rotatingWords: string[] = useMemo(() => ['secure', 'modern', 'scalable', 'elegant', 'powerful'], []);
+
+  // Scroll functions
+  const scrollToProjects = useCallback(() => {
     setVisibleSections(prev => ({ 
       ...prev, 
       about: true,
@@ -336,7 +497,6 @@ export default function Portfolio() {
       projects: true 
     }));
     
-    // Wait longer to ensure all sections render
     setTimeout(() => {
       if (projectsRef.current) {
         projectsRef.current.scrollIntoView({ 
@@ -345,10 +505,9 @@ export default function Portfolio() {
         });
       }
     }, 300);
-  };
+  }, []);
 
-  const scrollToContact = () => {
-    // Load all sections including contact
+  const scrollToContact = useCallback(() => {
     setVisibleSections(prev => ({ 
       ...prev, 
       about: true,
@@ -358,7 +517,6 @@ export default function Portfolio() {
       contact: true 
     }));
     
-    // Wait longer to ensure all sections render
     setTimeout(() => {
       if (contactRef.current) {
         contactRef.current.scrollIntoView({ 
@@ -367,13 +525,13 @@ export default function Portfolio() {
         });
       }
     }, 300);
-  };
+  }, []);
 
-  // Intersection Observer for lazy loading sections
+  // Optimized Intersection Observer for lazy loading sections
   useEffect(() => {
     const observerOptions = {
       root: null,
-      rootMargin: '100px', // Load 100px before section is visible
+      rootMargin: '100px',
       threshold: 0.01
     };
 
@@ -390,7 +548,6 @@ export default function Portfolio() {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    // Observe all sections
     const sections = [
       { ref: aboutRef, name: 'about' },
       { ref: skillsRef, name: 'skills' },
@@ -414,12 +571,18 @@ export default function Portfolio() {
     };
   }, []);
 
-  // GSAP Animations - only run on visible sections
+  // Optimized GSAP Animations with proper cleanup
   useEffect(() => {
     if (!visibleSections.about) return;
 
+    // Clean up previous animations
+    if (animationRefs.current.hero) {
+      animationRefs.current.hero.kill();
+    }
+
     // Hero section animations
     const tl = gsap.timeline();
+    animationRefs.current.hero = tl;
     
     tl.fromTo('.hero-title', 
       { opacity: 0, y: 100, scale: 0.8 },
@@ -436,7 +599,7 @@ export default function Portfolio() {
       '-=0.3'
     );
 
-    // Section animations with ScrollTrigger
+    // About section animation
     gsap.fromTo('.about-section',
       { opacity: 0, y: 100 },
       {
@@ -455,11 +618,14 @@ export default function Portfolio() {
 
     // Magnetic button effect
     const buttons = document.querySelectorAll('.magnetic-button');
+    const buttonCleanups: (() => void)[] = [];
+
     buttons.forEach(button => {
-      button.addEventListener('mousemove', (e: any) => {
+      const mouseMoveHandler = (e: Event) => {
+        const mouseEvent = e as MouseEvent;
         const rect = button.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const x = mouseEvent.clientX - rect.left;
+        const y = mouseEvent.clientY - rect.top;
         
         gsap.to(button, {
           x: (x - rect.width / 2) * 0.2,
@@ -467,85 +633,126 @@ export default function Portfolio() {
           duration: 0.3,
           ease: 'power2.out'
         });
-      });
+      };
       
-      button.addEventListener('mouseleave', () => {
+      const mouseLeaveHandler = () => {
         gsap.to(button, {
           x: 0,
           y: 0,
           duration: 0.6,
           ease: 'elastic.out(1, 0.5)'
         });
+      };
+
+      button.addEventListener('mousemove', mouseMoveHandler as EventListener);
+      button.addEventListener('mouseleave', mouseLeaveHandler as EventListener);
+
+      buttonCleanups.push(() => {
+        button.removeEventListener('mousemove', mouseMoveHandler as EventListener);
+        button.removeEventListener('mouseleave', mouseLeaveHandler as EventListener);
       });
     });
 
     return () => {
+      if (animationRefs.current.hero) {
+        animationRefs.current.hero.kill();
+      }
+      buttonCleanups.forEach(cleanup => cleanup());
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, [visibleSections.about]);
 
-  // Skills animations
+  // Skills animations with cleanup
   useEffect(() => {
     if (!visibleSections.skills) return;
 
-    gsap.fromTo('.skill-card',
-      { opacity: 0, scale: 0.8, y: 50 },
-      {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: '.skills-section',
-          start: 'top 70%',
-          end: 'bottom 30%',
-          toggleActions: 'play none none reverse'
+    animationRefs.current.skills.forEach(anim => anim.kill());
+    animationRefs.current.skills = [];
+
+    const skillCards = document.querySelectorAll('.skill-card');
+    const animations: gsap.core.Tween[] = [];
+
+    skillCards.forEach((card, index) => {
+      const anim = gsap.fromTo(card,
+        { opacity: 0, scale: 0.8, y: 50 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.8,
+          delay: index * 0.1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '.skills-section',
+            start: 'top 70%',
+            end: 'bottom 30%',
+            toggleActions: 'play none none reverse'
+          }
         }
-      }
-    );
+      );
+      animations.push(anim);
+    });
+
+    animationRefs.current.skills = animations;
 
     return () => {
+      animations.forEach(anim => anim.kill());
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, [visibleSections.skills]);
 
-  // Projects animations
+  // Projects animations with cleanup
   useEffect(() => {
     if (!visibleSections.projects) return;
 
-    gsap.fromTo('.project-card',
-      { opacity: 0, y: 80, rotationX: 15 },
-      {
-        opacity: 1,
-        y: 0,
-        rotationX: 0,
-        duration: 1,
-        stagger: 0.15,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: '.projects-section',
-          start: 'top 70%',
-          end: 'bottom 30%',
-          toggleActions: 'play none none reverse'
+    animationRefs.current.projects.forEach(anim => anim.kill());
+    animationRefs.current.projects = [];
+
+    const projectCards = document.querySelectorAll('.project-card');
+    const animations: gsap.core.Tween[] = [];
+
+    projectCards.forEach((card, index) => {
+      const anim = gsap.fromTo(card,
+        { opacity: 0, y: 80, rotationX: 15 },
+        {
+          opacity: 1,
+          y: 0,
+          rotationX: 0,
+          duration: 1,
+          delay: index * 0.15,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: '.projects-section',
+            start: 'top 70%',
+            end: 'bottom 30%',
+            toggleActions: 'play none none reverse'
+          }
         }
-      }
-    );
+      );
+      animations.push(anim);
+    });
+
+    animationRefs.current.projects = animations;
 
     return () => {
+      animations.forEach(anim => anim.kill());
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, [visibleSections.projects]);
 
-  // Experience timeline animations
+  // Experience timeline animations with cleanup
   useEffect(() => {
     if (!visibleSections.experience) return;
+
+    animationRefs.current.experience.forEach(anim => anim.kill());
+    animationRefs.current.experience = [];
+
+    const animations: gsap.core.Tween[] = [];
 
     timelineItemsRef.current.forEach((item, index) => {
       if (!item) return;
 
-      gsap.fromTo(item,
+      const itemAnim = gsap.fromTo(item,
         {
           opacity: 0,
           x: -50,
@@ -565,11 +772,11 @@ export default function Portfolio() {
           }
         }
       );
+      animations.push(itemAnim);
 
-      // Animate the dot with a nice bounce effect
       const dot = item.querySelector('.timeline-dot');
       if (dot) {
-        gsap.fromTo(dot,
+        const dotAnim = gsap.fromTo(dot,
           {
             scale: 0,
             opacity: 0
@@ -587,12 +794,12 @@ export default function Portfolio() {
             }
           }
         );
+        animations.push(dotAnim);
       }
 
-      // Stagger the achievements
       const achievements = item.querySelectorAll('.achievement-item');
       achievements.forEach((achievement, achievementIndex) => {
-        gsap.fromTo(achievement,
+        const achievementAnim = gsap.fromTo(achievement,
           {
             opacity: 0,
             x: -20
@@ -611,14 +818,19 @@ export default function Portfolio() {
             }
           }
         );
+        animations.push(achievementAnim);
       });
     });
 
+    animationRefs.current.experience = animations;
+
     return () => {
+      animations.forEach(anim => anim.kill());
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, [visibleSections.experience]);
 
+  // Optimized typing effect
   useEffect(() => {
     const typingSpeed = isDeleting ? 50 : 100;
     const word = rotatingWords[currentWordIndex];
@@ -641,12 +853,11 @@ export default function Portfolio() {
     }, typingSpeed);
 
     return () => clearTimeout(timer);
-  }, [currentText, isDeleting, currentWordIndex]);
+  }, [currentText, isDeleting, currentWordIndex, rotatingWords]);
 
+  // Optimized scroll handler for timeline
   useEffect(() => {
-    const handleScroll = (): void => {
-      setScrollY(window.scrollY);
-
+    const updateTimelineHeight = () => {
       if (timelineRef.current) {
         const timelineElement = timelineRef.current;
         const rect = timelineElement.getBoundingClientRect();
@@ -660,12 +871,8 @@ export default function Portfolio() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-
+    updateTimelineHeight();
+  }, [scrollY]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -698,33 +905,30 @@ export default function Portfolio() {
 
     setFormStatus('sent');
     setFormData({ name: '', email: '', message: '' });
-
-    
-    // Animate form submission
-   
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const openGifModal = (gifs: ProjectImage[], startIndex: number) => {
+  const openMediaModal = useCallback((media: ProjectMedia[], startIndex: number) => {
     setModalState({
       isOpen: true,
-      gifs,
+      media,
       currentIndex: startIndex
     });
-  };
+  }, []);
 
-  const closeGifModal = () => {
+  const closeMediaModal = useCallback(() => {
     setModalState({
       isOpen: false,
-      gifs: [],
+      media: [],
       currentIndex: 0
     });
-  };
+  }, []);
 
-  const skills = {
+  // Memoized skills data
+  const skills = useMemo(() => ({
     software: [
       'JavaScript/TypeScript', 
       'React', 
@@ -748,19 +952,21 @@ export default function Portfolio() {
       'MATLAB',
       'Arduino/Raspberry Pi'
     ]
-  };
+  }), []);
 
-  const projects: Project[] = [
+  // Memoized projects data with videos
+  const projects: Project[] = useMemo(() => [
     {
       title: 'Voice-to-text (Whisper + Silero) with Gemini',
       category: 'Linux App',
       description: 'Developed an AI application that transcribes audio using Whisper and Silero for VAD, with the transcribed text fed into Gemini for analysis or responses.',
       tech: ['Gemini model', 'Silero model', 'Whisper model', 'Python', 'React'],
       gradient: 'from-purple-900/20 via-violet-900/20 to-fuchsia-900/20',
-      gifs: [
+      media: [
         {
-          url: 'gifs/vtt.gif',
-          alt: 'Transcribing youtube video'
+          url: 'videos/vtt.mp4',
+          alt: 'Transcribing youtube video',
+          type: 'video'
         }
       ]
     },
@@ -770,10 +976,11 @@ export default function Portfolio() {
       description: 'Built a real-time face detection system leveraging ArchFace models for accurate recognition.',
       tech: ['ArchFace model', 'Python'],
       gradient: 'from-blue-900/20 via-cyan-900/20 to-indigo-900/20',
-      gifs: [
+      media: [
         {
-          url: 'gifs/face-recognition.gif',
-          alt: 'Face recognition'
+          url: 'videos/face-recognition.mp4',
+          alt: 'Face recognition',
+          type: 'video'
         }
       ]
     },
@@ -783,14 +990,16 @@ export default function Portfolio() {
       description: 'Implemented an authentication system managed via Flutter (JWT) and React (session management) using NextJs and BetterAuth.',
       tech: ['NextJs', 'React', 'Flutter', 'Drizzle ORM (PostgreSQL)'],
       gradient: 'from-emerald-900/20 via-teal-900/20 to-green-900/20',
-      gifs: [
+      media: [
         {
-          url: 'gifs/web-next-login.gif',
-          alt: 'Website authentication session management with BetterAuth'
+          url: 'videos/web-next-login.mp4',
+          alt: 'Website authentication session management with BetterAuth',
+          type: 'video'
         },
         {
-          url: 'gifs/flutter-next-login.gif',
-          alt: 'Flutter authentication JWT with BetterAuth'
+          url: 'videos/flutter-next-login.mp4',
+          alt: 'Flutter authentication JWT with BetterAuth',
+          type: 'video'
         }
       ]
     },
@@ -800,10 +1009,11 @@ export default function Portfolio() {
       description: 'Developed a fully custom authentication app using session management with Redis.',
       tech: ['React', 'Python', 'Redis', 'MySQL'],
       gradient: 'from-orange-900/20 via-red-900/20 to-amber-900/20',
-      gifs: [
+      media: [
         {
-          url: 'gifs/python-scratch-login.gif',
-          alt: 'Python redis authentication from scratch'
+          url: 'videos/python-scratch-login.mp4',
+          alt: 'Python redis authentication from scratch',
+          type: 'video'
         }
       ]
     },
@@ -813,10 +1023,11 @@ export default function Portfolio() {
       description: 'Created a foundational AI agent using Langgraph for structured task execution.',
       tech: ['Python', 'Langgraph'],
       gradient: 'from-indigo-900/20 via-purple-900/20 to-violet-900/20',
-      gifs: [
+      media: [
         {
-          url: 'gifs/ai-agent.gif',
-          alt: 'Structure of Ai agent'
+          url: 'videos/ai-agent.mp4',
+          alt: 'Structure of Ai agent',
+          type: 'video'
         }
       ]
     },
@@ -826,24 +1037,28 @@ export default function Portfolio() {
       description: 'Designed a walking game for portfolio purposes but decided to pause development to maintain website performance.',
       tech: ['Godot Engine'],
       gradient: 'from-teal-900/20 via-cyan-900/20 to-blue-900/20',
-      gifs: [
+      media: [
         {
-          url: 'gifs/godot-part-1.gif',
-          alt: 'Godot part 1'
+          url: 'videos/godot-part-1.mp4',
+          alt: 'Godot part 1',
+          type: 'video'
         },
         {
-          url: 'gifs/godot-part-2.gif',
-          alt: 'Godot part 2'
+          url: 'videos/godot-part-2.mp4',
+          alt: 'Godot part 2',
+          type: 'video'
         },
         {
-          url: 'gifs/godot-part-3.gif',
-          alt: 'Godot part 3'
+          url: 'videos/godot-part-3.mp4',
+          alt: 'Godot part 3',
+          type: 'video'
         }
       ]
     }
-  ];
+  ], []);
 
-  const experiences: Experience[] = [
+  // Memoized experiences data
+  const experiences: Experience[] = useMemo(() => [
     {
       company: 'Senfficient Sdn Bhd, Penang',
       position: 'Software Engineer',
@@ -876,9 +1091,9 @@ export default function Portfolio() {
       ],
       color: 'fuchsia'
     }
-  ];
+  ], []);
 
-  const getColorClasses = (color: string) => {
+  const getColorClasses = useCallback((color: string) => {
     switch (color) {
       case 'violet':
         return {
@@ -909,7 +1124,7 @@ export default function Portfolio() {
           text: 'text-violet-400'
         };
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-950 text-slate-100 overflow-x-hidden">
@@ -1033,12 +1248,12 @@ export default function Portfolio() {
         }
       `}</style>
 
-      {/* GIF Modal */}
-      <GifModal
-        gifs={modalState.gifs}
+      {/* Video Modal */}
+      <VideoModal
+        media={modalState.media}
         initialIndex={modalState.currentIndex}
         isOpen={modalState.isOpen}
-        onClose={closeGifModal}
+        onClose={closeMediaModal}
       />
 
       {/* Simplified Background */}
@@ -1363,12 +1578,12 @@ export default function Portfolio() {
                       </div>
                     </div>
 
-                    {/* GIF Section - At the bottom */}
+                    {/* Media Section - At the bottom */}
                     <div className="mt-8">
-                      <ProjectGifSection 
-                        gifs={project.gifs} 
+                      <ProjectMediaSection 
+                        media={project.media} 
                         projectTitle={project.title}
-                        onGifClick={(index) => openGifModal(project.gifs, index)}
+                        onMediaClick={(index) => openMediaModal(project.media, index)}
                       />
                     </div>
                   </div>
