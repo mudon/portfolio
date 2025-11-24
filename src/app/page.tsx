@@ -1,21 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, ChangeEvent, FormEvent, useMemo } from 'react';
-import {
-  Github, Linkedin, Mail, ExternalLink, Code, Cpu, Wrench, ChevronDown,
-  Phone, MapPin, Send, Briefcase, Calendar, MapPinIcon, X, ChevronLeft, ChevronRight
-} from 'lucide-react';
+
 import { Canvas } from '@react-three/fiber';
 import { Suspense } from 'react';
 import Model from './hazim';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Html } from '@react-three/drei';
 
-// Register GSAP plugins
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import {
+  Github, Linkedin, Mail, ExternalLink, Code, Cpu, Wrench, ChevronDown,
+  Phone, MapPin, Send, Briefcase, Calendar, MapPinIcon, X, ChevronLeft, ChevronRight,
+  Sparkles, Cloud, Zap, Heart, Play, Star
+} from 'lucide-react';
+
 
 interface FormData {
   name: string;
@@ -38,17 +35,7 @@ interface Project {
   media: ProjectMedia[];
 }
 
-interface Experience {
-  company: string;
-  position: string;
-  duration: string;
-  location: string;
-  description: string;
-  achievements: string[];
-  color: 'violet' | 'fuchsia' | 'cyan';
-}
-
-// Video Modal Component
+// Video Modal Component (Cartoon Style)
 const VideoModal = ({ 
   media, 
   initialIndex, 
@@ -64,22 +51,18 @@ const VideoModal = ({
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const nextMedia = useCallback(() => {
-    // Pause current video
     const currentVideo = videoRefs.current[currentIndex];
     if (currentVideo && media[currentIndex].type === 'video') {
       currentVideo.pause();
     }
-    
     setCurrentIndex((prev) => (prev + 1) % media.length);
   }, [media.length, currentIndex, media]);
 
   const prevMedia = useCallback(() => {
-    // Pause current video
     const currentVideo = videoRefs.current[currentIndex];
     if (currentVideo && media[currentIndex].type === 'video') {
       currentVideo.pause();
     }
-    
     setCurrentIndex((prev) => (prev - 1 + media.length) % media.length);
   }, [media.length, currentIndex, media]);
 
@@ -89,7 +72,6 @@ const VideoModal = ({
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
-      // Pause all videos when modal closes
       videoRefs.current.forEach(video => {
         if (video) {
           video.pause();
@@ -97,7 +79,6 @@ const VideoModal = ({
         }
       });
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -106,7 +87,6 @@ const VideoModal = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      
       switch (e.key) {
         case 'Escape':
           onClose();
@@ -119,12 +99,10 @@ const VideoModal = ({
           break;
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, prevMedia, nextMedia, onClose]);
 
-  // Auto-play video when it becomes current
   useEffect(() => {
     const currentVideo = videoRefs.current[currentIndex];
     if (currentVideo && media[currentIndex].type === 'video') {
@@ -137,89 +115,92 @@ const VideoModal = ({
   const currentMedia = media[currentIndex];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg">
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 dark-glass p-3 rounded-full hover:scale-110 transition-transform duration-300"
+        className="absolute top-6 right-6 z-10 comic-button p-4 rounded-full"
+        style={{ background: 'linear-gradient(45deg, #FF6B6B, #FF8E8E)' }}
       >
         <X className="w-6 h-6 text-white" />
       </button>
 
       <div className="relative max-w-6xl max-h-[90vh] w-full mx-4">
-        {/* Navigation Arrows */}
         {media.length > 1 && (
           <>
             <button
               onClick={prevMedia}
-              className="absolute left-4 top-1/2 -translate-y-1/2 dark-glass p-4 rounded-full hover:scale-110 transition-transform duration-300 z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 comic-button p-4 rounded-full"
+              style={{ background: 'linear-gradient(45deg, #4ECDC4, #6A89CC)' }}
             >
               <ChevronLeft className="w-6 h-6 text-white" />
             </button>
             <button
               onClick={nextMedia}
-              className="absolute right-4 top-1/2 -translate-y-1/2 dark-glass p-4 rounded-full hover:scale-110 transition-transform duration-300 z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 comic-button p-4 rounded-full"
+              style={{ background: 'linear-gradient(45deg, #4ECDC4, #6A89CC)' }}
             >
               <ChevronRight className="w-6 h-6 text-white" />
             </button>
           </>
         )}
 
-        {/* Main Media */}
-        <div className="w-full h-full max-h-[80vh] flex items-center justify-center">
-          {currentMedia.type === 'video' ? (
-            <video
-              ref={el => { videoRefs.current[currentIndex] = el }}
-              src={currentMedia.url}
-              className="w-full h-full max-h-[80vh] object-contain rounded-lg"
-              controls
-              muted
-              loop
-              playsInline
-            />
-          ) : (
-            <img
-              src={currentMedia.url}
-              alt={currentMedia.alt}
-              loading="lazy"
-              className="w-full h-full max-h-[80vh] object-contain rounded-lg"
-            />
-          )}
+        <div className="cartoon-border-thick bg-white rounded-3xl p-4">
+          <div className="w-full h-full max-h-[70vh] flex items-center justify-center rounded-2xl overflow-hidden">
+            {currentMedia.type === 'video' ? (
+              <video
+                ref={el => { videoRefs.current[currentIndex] = el }}
+                src={currentMedia.url}
+                className="w-full h-full max-h-[70vh] object-contain rounded-lg"
+                controls
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img
+                src={currentMedia.url}
+                alt={currentMedia.alt}
+                loading="lazy"
+                className="w-full h-full max-h-[70vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
         </div>
 
-        {/* Media Counter */}
         {media.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 dark-glass px-4 py-2 rounded-full text-white text-sm">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 comic-button px-4 py-2 rounded-full text-white text-sm font-black">
             {currentIndex + 1} / {media.length}
           </div>
         )}
 
-        {/* Thumbnails */}
         {media.length > 1 && (
-          <div className="flex gap-2 justify-center mt-4 overflow-x-auto py-2">
+          <div className="flex gap-3 justify-center mt-6 overflow-x-auto py-2">
             {media.map((item, index) => (
               <button
                 key={index}
                 onClick={() => {
-                  // Pause current video
                   const currentVideo = videoRefs.current[currentIndex];
                   if (currentVideo && media[currentIndex].type === 'video') {
                     currentVideo.pause();
                   }
                   setCurrentIndex(index);
                 }}
-                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden cartoon-border transition-all duration-300 ${
                   index === currentIndex 
-                    ? 'border-violet-500 scale-110' 
-                    : 'border-transparent hover:border-white/50'
+                    ? 'border-4 border-yellow-400 scale-110' 
+                    : 'border-2 border-gray-400 hover:border-yellow-300'
                 }`}
               >
                 {item.type === 'video' ? (
-                  <video
-                    src={item.url}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                  />
+                  <div className="relative w-full h-full">
+                    <video
+                      src={item.url}
+                      className="w-full h-full object-cover"
+                      muted
+                      playsInline
+                    />
+                    <Play className="absolute inset-0 m-auto w-6 h-6 text-white opacity-70" />
+                  </div>
                 ) : (
                   <img
                     src={item.url}
@@ -237,7 +218,7 @@ const VideoModal = ({
   );
 };
 
-// Project Media Section Component
+// Project Media Section Component (Cartoon Style)
 const ProjectMediaSection = ({ 
   media, 
   projectTitle,
@@ -252,40 +233,23 @@ const ProjectMediaSection = ({
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const nextMedia = useCallback(() => {
-    // Pause current video
     const currentVideo = videoRefs.current[currentIndex];
     if (currentVideo && media[currentIndex].type === 'video') {
       currentVideo.pause();
       currentVideo.currentTime = 0;
     }
-    
     setCurrentIndex((prev) => (prev + 1) % media.length);
   }, [media.length, currentIndex, media]);
 
   const prevMedia = useCallback(() => {
-    // Pause current video
     const currentVideo = videoRefs.current[currentIndex];
     if (currentVideo && media[currentIndex].type === 'video') {
       currentVideo.pause();
       currentVideo.currentTime = 0;
     }
-    
     setCurrentIndex((prev) => (prev - 1 + media.length) % media.length);
   }, [media.length, currentIndex, media]);
 
-  // Auto-slide effect for images only
-  useEffect(() => {
-    if (media.length <= 1 || isHovered) return;
-    
-    const currentItem = media[currentIndex];
-    // Only auto-slide if it's an image, not a video
-    if (currentItem.type === 'image') {
-      const interval = setInterval(nextMedia, 4000);
-      return () => clearInterval(interval);
-    }
-  }, [media.length, nextMedia, isHovered, currentIndex, media]);
-
-  // Play video on hover
   useEffect(() => {
     const currentVideo = videoRefs.current[currentIndex];
     if (currentVideo && media[currentIndex].type === 'video') {
@@ -304,19 +268,16 @@ const ProjectMediaSection = ({
 
   return (
     <div 
-      className={`relative w-full rounded-2xl overflow-hidden group cursor-pointer transition-all duration-500 ${
-        isHovered ? 'h-64 scale-105' : 'h-48'
-      }`}
+      className="relative w-full rounded-2xl overflow-hidden group cursor-pointer h-48 cartoon-border"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onMediaClick(currentIndex)}
     >
-      {/* Main Media */}
       {currentMedia.type === 'video' ? (
         <video
           ref={el => { videoRefs.current[currentIndex] = el }}
           src={currentMedia.url}
-          className="w-full h-full object-cover transition-all duration-500"
+          className="w-full h-full object-cover"
           muted
           loop
           playsInline
@@ -326,20 +287,16 @@ const ProjectMediaSection = ({
           src={currentMedia.url}
           alt={currentMedia.alt}
           loading="lazy"
-          className="w-full h-full object-cover transition-all duration-500"
+          className="w-full h-full object-cover"
         />
       )}
       
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-        <div className={`${
-          isHovered ? 'opacity-100 scale-110' : 'opacity-0 scale-90'
-        } transition-all duration-300 dark-glass px-4 py-2 rounded-full`}>
-          <span className="text-white text-sm font-medium">Click to expand</span>
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all duration-300">
+        <div className="comic-button px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="text-white text-sm font-black">CLICK TO EXPAND!</span>
         </div>
       </div>
       
-      {/* Navigation Arrows */}
       {media.length > 1 && (
         <>
           <button
@@ -347,7 +304,8 @@ const ProjectMediaSection = ({
               e.stopPropagation();
               prevMedia();
             }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 dark-glass p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+            className="absolute left-2 top-1/2 -translate-y-1/2 comic-button p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: 'linear-gradient(45deg, #4ECDC4, #6A89CC)' }}
           >
             <ChevronLeft className="w-4 h-4 text-white" />
           </button>
@@ -356,14 +314,14 @@ const ProjectMediaSection = ({
               e.stopPropagation();
               nextMedia();
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 dark-glass p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+            className="absolute right-2 top-1/2 -translate-y-1/2 comic-button p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: 'linear-gradient(45deg, #4ECDC4, #6A89CC)' }}
           >
             <ChevronRight className="w-4 h-4 text-white" />
           </button>
         </>
       )}
       
-      {/* Dots Indicator */}
       {media.length > 1 && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
           {media.map((_, index) => (
@@ -371,7 +329,6 @@ const ProjectMediaSection = ({
               key={index}
               onClick={(e) => {
                 e.stopPropagation();
-                // Pause current video
                 const currentVideo = videoRefs.current[currentIndex];
                 if (currentVideo && media[currentIndex].type === 'video') {
                   currentVideo.pause();
@@ -379,27 +336,25 @@ const ProjectMediaSection = ({
                 }
                 setCurrentIndex(index);
               }}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex 
-                  ? 'bg-white scale-125' 
-                  : 'bg-white/50 hover:bg-white/80'
+                  ? 'bg-yellow-400 scale-125' 
+                  : 'bg-white/80 hover:bg-white'
               }`}
             />
           ))}
         </div>
       )}
 
-      {/* Media Badge */}
-      <div className="absolute top-2 right-2 dark-glass px-2 py-1 rounded-full">
-        <span className="text-xs text-violet-300 font-medium">
-          {currentMedia.type === 'video' ? 'VIDEO' : 'IMAGE'}
+      <div className="absolute top-2 right-2 comic-button px-2 py-1 rounded-full">
+        <span className="text-xs text-white font-black">
+          {currentMedia.type === 'video' ? '🎬 VIDEO' : '🖼️ IMAGE'}
         </span>
       </div>
     </div>
   );
 };
 
-// Fix 1: Initialize useRef with null and use number instead of NodeJS.Timeout for browser compatibility
 const useThrottledScroll = (throttleMs: number = 16) => {
   const [scrollY, setScrollY] = useState<number>(0);
   const scrollTimeoutRef = useRef<number | null>(null);
@@ -430,7 +385,7 @@ const useThrottledScroll = (throttleMs: number = 16) => {
   return scrollY;
 };
 
-export default function Portfolio() {
+export default function CartoonPortfolio() {
   const scrollY = useThrottledScroll(16);
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '' });
   const [formStatus, setFormStatus] = useState<'sending' | 'sent' | ''>('');
@@ -448,7 +403,6 @@ export default function Portfolio() {
     currentIndex: 0
   });
   
-  // Lazy loading states
   const [visibleSections, setVisibleSections] = useState<{
     about: boolean;
     skills: boolean;
@@ -471,23 +425,9 @@ export default function Portfolio() {
   const projectsRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const timelineItemsRef = useRef<(HTMLDivElement | null)[]>([]);
-  
-  // GSAP animation refs to track instances for cleanup
-  const animationRefs = useRef<{
-    hero: gsap.core.Timeline | null;
-    skills: gsap.core.Tween[];
-    projects: gsap.core.Tween[];
-    experience: gsap.core.Tween[];
-  }>({
-    hero: null,
-    skills: [],
-    projects: [],
-    experience: []
-  });
 
-  const rotatingWords: string[] = useMemo(() => ['secure', 'modern', 'scalable', 'elegant', 'powerful'], []);
+  const rotatingWords: string[] = useMemo(() => ['magical', 'fun', 'creative', 'playful', 'amazing'], []);
 
-  // Scroll functions
   const scrollToProjects = useCallback(() => {
     setVisibleSections(prev => ({ 
       ...prev, 
@@ -527,7 +467,6 @@ export default function Portfolio() {
     }, 300);
   }, []);
 
-  // Optimized Intersection Observer for lazy loading sections
   useEffect(() => {
     const observerOptions = {
       root: null,
@@ -571,266 +510,6 @@ export default function Portfolio() {
     };
   }, []);
 
-  // Optimized GSAP Animations with proper cleanup
-  useEffect(() => {
-    if (!visibleSections.about) return;
-
-    // Clean up previous animations
-    if (animationRefs.current.hero) {
-      animationRefs.current.hero.kill();
-    }
-
-    // Hero section animations
-    const tl = gsap.timeline();
-    animationRefs.current.hero = tl;
-    
-    tl.fromTo('.hero-title', 
-      { opacity: 0, y: 100, scale: 0.8 },
-      { opacity: 1, y: 0, scale: 1, duration: 1.5, ease: 'power3.out' }
-    )
-    .fromTo('.hero-subtitle',
-      { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 1, ease: 'power2.out' },
-      '-=0.5'
-    )
-    .fromTo('.hero-buttons',
-      { opacity: 0, y: 30 },
-      { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-      '-=0.3'
-    );
-
-    // About section animation
-    gsap.fromTo('.about-section',
-      { opacity: 0, y: 100 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: '.about-section',
-          start: 'top 80%',
-          end: 'bottom 20%',
-          toggleActions: 'play none none reverse'
-        }
-      }
-    );
-
-    // Magnetic button effect
-    const buttons = document.querySelectorAll('.magnetic-button');
-    const buttonCleanups: (() => void)[] = [];
-
-    buttons.forEach(button => {
-      const mouseMoveHandler = (e: Event) => {
-        const mouseEvent = e as MouseEvent;
-        const rect = button.getBoundingClientRect();
-        const x = mouseEvent.clientX - rect.left;
-        const y = mouseEvent.clientY - rect.top;
-        
-        gsap.to(button, {
-          x: (x - rect.width / 2) * 0.2,
-          y: (y - rect.height / 2) * 0.2,
-          duration: 0.3,
-          ease: 'power2.out'
-        });
-      };
-      
-      const mouseLeaveHandler = () => {
-        gsap.to(button, {
-          x: 0,
-          y: 0,
-          duration: 0.6,
-          ease: 'elastic.out(1, 0.5)'
-        });
-      };
-
-      button.addEventListener('mousemove', mouseMoveHandler as EventListener);
-      button.addEventListener('mouseleave', mouseLeaveHandler as EventListener);
-
-      buttonCleanups.push(() => {
-        button.removeEventListener('mousemove', mouseMoveHandler as EventListener);
-        button.removeEventListener('mouseleave', mouseLeaveHandler as EventListener);
-      });
-    });
-
-    return () => {
-      if (animationRefs.current.hero) {
-        animationRefs.current.hero.kill();
-      }
-      buttonCleanups.forEach(cleanup => cleanup());
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-  }, [visibleSections.about]);
-
-  // Skills animations with cleanup
-  useEffect(() => {
-    if (!visibleSections.skills) return;
-
-    animationRefs.current.skills.forEach(anim => anim.kill());
-    animationRefs.current.skills = [];
-
-    const skillCards = document.querySelectorAll('.skill-card');
-    const animations: gsap.core.Tween[] = [];
-
-    skillCards.forEach((card, index) => {
-      const anim = gsap.fromTo(card,
-        { opacity: 0, scale: 0.8, y: 50 },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.8,
-          delay: index * 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.skills-section',
-            start: 'top 70%',
-            end: 'bottom 30%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-      animations.push(anim);
-    });
-
-    animationRefs.current.skills = animations;
-
-    return () => {
-      animations.forEach(anim => anim.kill());
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-  }, [visibleSections.skills]);
-
-  // Projects animations with cleanup
-  useEffect(() => {
-    if (!visibleSections.projects) return;
-
-    animationRefs.current.projects.forEach(anim => anim.kill());
-    animationRefs.current.projects = [];
-
-    const projectCards = document.querySelectorAll('.project-card');
-    const animations: gsap.core.Tween[] = [];
-
-    projectCards.forEach((card, index) => {
-      const anim = gsap.fromTo(card,
-        { opacity: 0, y: 80, rotationX: 15 },
-        {
-          opacity: 1,
-          y: 0,
-          rotationX: 0,
-          duration: 1,
-          delay: index * 0.15,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: '.projects-section',
-            start: 'top 70%',
-            end: 'bottom 30%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-      animations.push(anim);
-    });
-
-    animationRefs.current.projects = animations;
-
-    return () => {
-      animations.forEach(anim => anim.kill());
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-  }, [visibleSections.projects]);
-
-  // Experience timeline animations with cleanup
-  useEffect(() => {
-    if (!visibleSections.experience) return;
-
-    animationRefs.current.experience.forEach(anim => anim.kill());
-    animationRefs.current.experience = [];
-
-    const animations: gsap.core.Tween[] = [];
-
-    timelineItemsRef.current.forEach((item, index) => {
-      if (!item) return;
-
-      const itemAnim = gsap.fromTo(item,
-        {
-          opacity: 0,
-          x: -50,
-          scale: 0.9
-        },
-        {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-          duration: 1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: item,
-            start: 'top 85%',
-            end: 'bottom 20%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-      animations.push(itemAnim);
-
-      const dot = item.querySelector('.timeline-dot');
-      if (dot) {
-        const dotAnim = gsap.fromTo(dot,
-          {
-            scale: 0,
-            opacity: 0
-          },
-          {
-            scale: 1,
-            opacity: 1,
-            duration: 0.8,
-            ease: 'elastic.out(1, 0.8)',
-            scrollTrigger: {
-              trigger: item,
-              start: 'top 85%',
-              end: 'bottom 20%',
-              toggleActions: 'play none none reverse'
-            }
-          }
-        );
-        animations.push(dotAnim);
-      }
-
-      const achievements = item.querySelectorAll('.achievement-item');
-      achievements.forEach((achievement, achievementIndex) => {
-        const achievementAnim = gsap.fromTo(achievement,
-          {
-            opacity: 0,
-            x: -20
-          },
-          {
-            opacity: 1,
-            x: 0,
-            duration: 0.6,
-            delay: 0.3 + achievementIndex * 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: item,
-              start: 'top 85%',
-              end: 'bottom 20%',
-              toggleActions: 'play none none reverse'
-            }
-          }
-        );
-        animations.push(achievementAnim);
-      });
-    });
-
-    animationRefs.current.experience = animations;
-
-    return () => {
-      animations.forEach(anim => anim.kill());
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-  }, [visibleSections.experience]);
-
-  // Optimized typing effect
   useEffect(() => {
     const typingSpeed = isDeleting ? 50 : 100;
     const word = rotatingWords[currentWordIndex];
@@ -855,7 +534,6 @@ export default function Portfolio() {
     return () => clearTimeout(timer);
   }, [currentText, isDeleting, currentWordIndex, rotatingWords]);
 
-  // Optimized scroll handler for timeline
   useEffect(() => {
     const updateTimelineHeight = () => {
       if (timelineRef.current) {
@@ -877,18 +555,6 @@ export default function Portfolio() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setFormStatus('sending');
-
-    const tl = gsap.timeline();
-    tl.to('.contact-form', {
-      scale: 0.95,
-      duration: 0.2,
-      ease: 'power2.in'
-    })
-    .to('.contact-form', {
-      scale: 1,
-      duration: 0.3,
-      ease: 'elastic.out(1, 0.5)'
-    });
     
     const message = `New Contact Form Submission:\n\nName: ${formData.name}\nEmail: ${formData.email}\nMessage: ${formData.message}`;
     const response = await fetch(`https://api.telegram.org/bot${process.env.NEXT_PUBLIC_BOT_TOKEN}/sendMessage`, {
@@ -927,7 +593,6 @@ export default function Portfolio() {
     });
   }, []);
 
-  // Memoized skills data
   const skills = useMemo(() => ({
     software: [
       'JavaScript/TypeScript', 
@@ -954,14 +619,14 @@ export default function Portfolio() {
     ]
   }), []);
 
-  // Memoized projects data with videos
+  // Update projects with Mickey Mouse colors
   const projects: Project[] = useMemo(() => [
     {
       title: 'Voice-to-text (Whisper + Silero) with Gemini',
       category: 'Linux App',
       description: 'Developed an AI application that transcribes audio using Whisper and Silero for VAD, with the transcribed text fed into Gemini for analysis or responses.',
       tech: ['Gemini model', 'Silero model', 'Whisper model', 'Python', 'React'],
-      gradient: 'from-purple-900/20 via-violet-900/20 to-fuchsia-900/20',
+      gradient: 'from-red-500 to-red-600',
       media: [
         {
           url: 'videos/vtt.mp4',
@@ -975,7 +640,7 @@ export default function Portfolio() {
       category: 'Machine Learning',
       description: 'Built a real-time face detection system leveraging ArchFace models for accurate recognition.',
       tech: ['ArchFace model', 'Python'],
-      gradient: 'from-blue-900/20 via-cyan-900/20 to-indigo-900/20',
+      gradient: 'from-yellow-500 to-yellow-600',
       media: [
         {
           url: 'videos/face-recognition.mp4',
@@ -989,7 +654,7 @@ export default function Portfolio() {
       category: 'Authentication apps',
       description: 'Implemented an authentication system managed via Flutter (JWT) and React (session management) using NextJs and BetterAuth.',
       tech: ['NextJs', 'React', 'Flutter', 'Drizzle ORM (PostgreSQL)'],
-      gradient: 'from-emerald-900/20 via-teal-900/20 to-green-900/20',
+      gradient: 'from-red-500 to-black',
       media: [
         {
           url: 'videos/web-next-login.mp4',
@@ -1008,7 +673,7 @@ export default function Portfolio() {
       category: 'Authentication apps',
       description: 'Developed a fully custom authentication app using session management with Redis.',
       tech: ['React', 'Python', 'Redis', 'MySQL'],
-      gradient: 'from-orange-900/20 via-red-900/20 to-amber-900/20',
+      gradient: 'from-yellow-500 to-red-500',
       media: [
         {
           url: 'videos/python-scratch-login.mp4',
@@ -1022,7 +687,7 @@ export default function Portfolio() {
       category: 'AI Agent',
       description: 'Created a foundational AI agent using Langgraph for structured task execution.',
       tech: ['Python', 'Langgraph'],
-      gradient: 'from-indigo-900/20 via-purple-900/20 to-violet-900/20',
+      gradient: 'from-black to-red-500',
       media: [
         {
           url: 'videos/ai-agent.mp4',
@@ -1036,7 +701,7 @@ export default function Portfolio() {
       category: 'Game',
       description: 'Designed a walking game for portfolio purposes but decided to pause development to maintain website performance.',
       tech: ['Godot Engine'],
-      gradient: 'from-teal-900/20 via-cyan-900/20 to-blue-900/20',
+      gradient: 'from-red-500 to-yellow-500',
       media: [
         {
           url: 'videos/godot-part-1.mp4',
@@ -1057,8 +722,7 @@ export default function Portfolio() {
     }
   ], []);
 
-  // Memoized experiences data
-  const experiences: Experience[] = useMemo(() => [
+  const experiences = useMemo(() => [
     {
       company: 'Senfficient Sdn Bhd, Penang',
       position: 'Software Engineer',
@@ -1097,154 +761,207 @@ export default function Portfolio() {
     switch (color) {
       case 'violet':
         return {
-          gradient: 'from-violet-500/20 via-purple-500/10 to-fuchsia-500/10',
+          gradient: 'from-violet-400 to-purple-500',
           dot: 'bg-gradient-to-br from-violet-500 to-purple-600',
-          glow: 'shadow-violet-500/50',
-          text: 'text-violet-400'
+          text: 'text-violet-600',
+          border: 'border-violet-500'
         };
       case 'fuchsia':
         return {
-          gradient: 'from-fuchsia-500/20 via-pink-500/10 to-rose-500/10',
+          gradient: 'from-fuchsia-400 to-pink-500',
           dot: 'bg-gradient-to-br from-fuchsia-500 to-pink-600',
-          glow: 'shadow-fuchsia-500/50',
-          text: 'text-fuchsia-400'
+          text: 'text-fuchsia-600',
+          border: 'border-fuchsia-500'
         };
       case 'cyan':
         return {
-          gradient: 'from-cyan-500/20 via-blue-500/10 to-indigo-500/10',
+          gradient: 'from-cyan-400 to-blue-500',
           dot: 'bg-gradient-to-br from-cyan-500 to-blue-600',
-          glow: 'shadow-cyan-500/50',
-          text: 'text-cyan-400'
+          text: 'text-cyan-600',
+          border: 'border-cyan-500'
         };
       default:
         return {
-          gradient: 'from-violet-500/20 via-purple-500/10 to-fuchsia-500/10',
+          gradient: 'from-violet-400 to-purple-500',
           dot: 'bg-gradient-to-br from-violet-500 to-purple-600',
-          glow: 'shadow-violet-500/50',
-          text: 'text-violet-400'
+          text: 'text-violet-600',
+          border: 'border-violet-500'
         };
     }
   }, []);
 
+  // Floating elements animation
+  const FloatingElement = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
+    <div 
+      className="floating-element"
+      style={{ animationDelay: `${delay}s` }}
+    >
+      {children}
+    </div>
+  );
+
+  // Mickey Mouse Head Background Element
+  const MickeyHead = ({ size, position, color = 'red' }: { size: string; position: string; color?: string }) => (
+    <div className={`absolute ${position} ${size} rounded-full bg-${color}-500 mickey-glow`}></div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-950 text-slate-100 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white overflow-x-hidden">
       <style jsx>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-20px) rotate(2deg); }
+          66% { transform: translateY(-10px) rotate(-2deg); }
+        }
+        
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
         }
-        @keyframes glow {
+        
+        @keyframes wiggle {
+          0%, 100% { transform: rotate(-3deg); }
+          50% { transform: rotate(3deg); }
+        }
+        
+        @keyframes pulse-glow {
           0%, 100% { 
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-            filter: brightness(1);
+            filter: drop-shadow(0 0 10px currentColor);
+            transform: scale(1);
           }
           50% { 
-            box-shadow: 0 0 40px rgba(139, 92, 246, 0.6), 0 0 60px rgba(192, 132, 252, 0.4);
-            filter: brightness(1.2);
+            filter: drop-shadow(0 0 20px currentColor);
+            transform: scale(1.05);
           }
         }
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
+        
+        @keyframes mickey-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
-        @keyframes timelineProgress {
-          0% { transform: scaleY(0); opacity: 0; }
-          50% { opacity: 1; }
-          100% { transform: scaleY(1); opacity: 1; }
+        
+        @keyframes sparkle {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1); }
         }
-        @keyframes liquidFlow {
-          0% { 
-            background-position: 0% 50%;
-            filter: brightness(1) saturate(1);
-          }
-          50% { 
-            background-position: 100% 50%;
-            filter: brightness(1.1) saturate(1.2);
-          }
-          100% { 
-            background-position: 0% 50%;
-            filter: brightness(1) saturate(1);
-          }
-        }
-        .animate-float {
+        
+        .floating-element {
           animation: float 6s ease-in-out infinite;
         }
-        .animate-glow {
-          animation: glow 3s ease-in-out infinite;
+        
+        .bounce-element {
+          animation: bounce 2s ease-in-out infinite;
         }
-        .animate-liquid {
-          animation: liquidFlow 8s ease-in-out infinite;
+        
+        .wiggle-element {
+          animation: wiggle 3s ease-in-out infinite;
         }
-        .shimmer-text {
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-          background-size: 1000px 100%;
-          animation: shimmer 3s infinite;
+        
+        .pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
         }
-        .liquid-glass {
-          background: linear-gradient(
-            135deg,
-            rgba(139, 92, 246, 0.15) 0%,
-            rgba(192, 132, 252, 0.1) 25%,
-            rgba(99, 102, 241, 0.15) 50%,
-            rgba(168, 85, 247, 0.1) 75%,
-            rgba(139, 92, 246, 0.15) 100%
-          );
-          background-size: 400% 400%;
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.15);
+        
+        .mickey-spin {
+          animation: mickey-spin 20s linear infinite;
+        }
+        
+        .sparkle {
+          animation: sparkle 2s ease-in-out infinite;
+        }
+        
+        .mickey-border {
+          border: 4px solid #000;
           box-shadow: 
-            inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-            inset 0 -1px 0 0 rgba(0, 0, 0, 0.3),
-            0 8px 32px 0 rgba(0, 0, 0, 0.36);
+            8px 8px 0 #000,
+            0 0 20px rgba(255, 0, 0, 0.3);
+          background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        }
+        
+        .mickey-border-thick {
+          border: 6px solid #000;
+          box-shadow: 
+            12px 12px 0 #000,
+            0 0 30px rgba(255, 0, 0, 0.4);
+          background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        }
+        
+        .mickey-button {
+          background: linear-gradient(45deg, #FF0000, #CC0000);
+          border: 3px solid #000;
+          box-shadow: 
+            6px 6px 0 #000,
+            0 0 15px rgba(255, 0, 0, 0.5);
+          transition: all 0.2s ease;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: white;
+        }
+        
+        .mickey-button:hover {
+          transform: translate(4px, 4px);
+          box-shadow: 
+            2px 2px 0 #000,
+            0 0 20px rgba(255, 0, 0, 0.7);
+          background: linear-gradient(45deg, #CC0000, #990000);
+        }
+        
+        .mickey-card {
+          background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+          border: 4px solid #000;
+          box-shadow: 
+            8px 8px 0 #000,
+            0 0 20px rgba(255, 215, 0, 0.2);
+          transition: all 0.3s ease;
+        }
+        
+        .mickey-card:hover {
+          transform: translate(4px, 4px);
+          box-shadow: 
+            4px 4px 0 #000,
+            0 0 30px rgba(255, 215, 0, 0.4);
+        }
+        
+        .mickey-glow {
+          box-shadow: 
+            0 0 50px rgba(255, 0, 0, 0.6),
+            inset 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+        
+        .mickey-timeline-line {
+          background: linear-gradient(to bottom, #FF0000, #FFD700, #FFFFFF);
+          border: 3px solid #000;
+          box-shadow: 4px 4px 0 #000;
+        }
+        
+        .mickey-timeline-dot {
+          border: 4px solid #000;
+          box-shadow: 
+            3px 3px 0 #000,
+            0 0 15px currentColor;
+        }
+        
+        .mickey-dotted-border {
+          border: 3px dashed #FFD700;
+          background: rgba(255, 215, 0, 0.1);
+          color: #FFD700;
+        }
+        
+        .mickey-speech-bubble {
           position: relative;
-          overflow: hidden;
-        }
-        .liquid-glass::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.1),
-            transparent
-          );
-          transition: left 0.6s ease;
-        }
-        .liquid-glass:hover::before {
-          left: 100%;
-        }
-        .dark-glass {
-          background: rgba(15, 23, 42, 0.7);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+          border: 3px solid #FFD700;
+          border-radius: 30px;
           box-shadow: 
-            0 8px 32px 0 rgba(0, 0, 0, 0.36),
-            inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            6px 6px 0 #000,
+            0 0 20px rgba(255, 215, 0, 0.3);
         }
-        .dark-glass:hover {
-          border: 1px solid rgba(139, 92, 246, 0.4);
-          box-shadow: 
-            0 8px 32px 0 rgba(139, 92, 246, 0.2),
-            inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-        }
-        .timeline-line {
-          background: linear-gradient(to bottom, 
-            rgba(139, 92, 246, 0.8) 0%,
-            rgba(192, 132, 252, 0.6) 30%,
-            rgba(34, 211, 238, 0.6) 70%,
-            rgba(6, 182, 212, 0.8) 100%);
-          box-shadow: 
-            0 0 20px rgba(139, 92, 246, 0.3),
-            inset 0 0 10px rgba(255, 255, 255, 0.1);
-        }
-        .timeline-dot {
-          box-shadow: 
-            0 0 0 4px rgba(15, 23, 42, 0.8),
-            0 0 20px currentColor;
+        
+        .starry-bg {
+          background: 
+            radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(255, 0, 0, 0.1) 0%, transparent 50%);
         }
       `}</style>
 
@@ -1256,63 +973,81 @@ export default function Portfolio() {
         onClose={closeMediaModal}
       />
 
-      {/* Simplified Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div 
-          className="absolute w-[1000px] h-[1000px] rounded-full bg-gradient-to-r from-violet-600/5 via-fuchsia-600/5 to-purple-600/5 blur-3xl"
-          style={{
-            top: '5%',
-            right: '5%',
-          }}
-        />
-        <div 
-          className="absolute w-[800px] h-[800px] rounded-full bg-gradient-to-r from-cyan-600/5 via-blue-600/5 to-indigo-600/5 blur-3xl"
-          style={{
-            bottom: '10%',
-            left: '5%',
-          }}
-        />
+      {/* Mickey Mouse Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 starry-bg">
+        {/* Mickey Heads */}
+        <MickeyHead size="w-32 h-32" position="top-10 left-10" color="red" />
+        <MickeyHead size="w-24 h-24" position="top-40 right-20" color="yellow" />
+        <MickeyHead size="w-28 h-28" position="bottom-40 left-20" color="red" />
+        <MickeyHead size="w-20 h-20" position="bottom-20 right-32" color="yellow" />
+        
+        {/* Animated Stars */}
+        <FloatingElement delay={0}>
+          <div className="absolute top-1/4 left-1/4">
+            <Star className="w-8 h-8 text-yellow-400 sparkle" />
+          </div>
+        </FloatingElement>
+        <FloatingElement delay={1}>
+          <div className="absolute top-1/3 right-1/3">
+            <Star className="w-6 h-6 text-red-400 sparkle" />
+          </div>
+        </FloatingElement>
+        <FloatingElement delay={2}>
+          <div className="absolute bottom-1/4 left-1/3">
+            <Star className="w-10 h-10 text-yellow-300 sparkle" />
+          </div>
+        </FloatingElement>
+        
+        {/* Floating Mickey Ears */}
+        <div className="absolute top-20 right-20 wiggle-element">
+          <div className="w-16 h-16 bg-red-500 rounded-full mickey-glow"></div>
+        </div>
+        <div className="absolute bottom-32 left-32 bounce-element">
+          <div className="w-12 h-12 bg-yellow-500 rounded-full mickey-glow"></div>
+        </div>
       </div>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="min-h-screen flex items-center justify-center relative px-6 py-20">
-        <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-7xl mx-auto">
-          {/* 3D Model */}
+      <section ref={heroRef} className="min-h-screen flex items-center justify-center relative px-6 py-20 z-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-7xl mx-auto gap-15">
+          {/* 3D Model in Mickey Frame */}
           <div className="w-full lg:w-1/2 h-[400px] lg:h-[500px] mb-8 lg:mb-0">
-            <Canvas camera={{ position: [0, 0, 5], fov: 30 }}>
-              <Suspense fallback={
-                <Html center>
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="dark-glass rounded-2xl p-8 text-center">
-                      <div className="w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-violet-300">Loading 3D Model...</p>
+            <div className="mickey-border-thick rounded-3xl p-6 h-full relative">
+              {/* Mickey Ears Decoration */}
+              <div className="absolute -top-8 -left-8 w-16 h-16 bg-red-500 rounded-full mickey-glow"></div>
+              <div className="absolute -top-8 -right-8 w-16 h-16 bg-red-500 rounded-full mickey-glow"></div>
+              
+              <Canvas camera={{ position: [0, 0, 5], fov: 30 }}>
+                <Suspense fallback={
+                  <Html center>
+                    <div className="text-center">
+                      <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                      <p className="text-red-400 font-bold">Loading 3D Model...</p>
                     </div>
-                  </div>
-                </Html>
-              }>
-                <ambientLight intensity={2.5} />
-                <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} />
-                <pointLight position={[-10, -10, -10]} intensity={1} color="#8b5cf6" />
-                <Model position={[0, -1.5, 0]} />
-              </Suspense>
-            </Canvas>
-        </div>
+                  </Html>
+                }>
+                  <ambientLight intensity={2.5} />
+                  <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} />
+                  <pointLight position={[-10, -10, -10]} intensity={1} color="#FF0000" />
+                  <Model position={[0, -1.5, 0]} />
+                </Suspense>
+              </Canvas>
+            </div>
+          </div>
 
           {/* Hero Content */}
           <div className="w-full lg:w-1/2 text-center lg:text-left">
-            <h1 className="hero-title text-6xl md:text-8xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent relative">
-                Muhammad Hazim Bin Hishamuddin
-              </span>
-            </h1>
-            
-            {/* Enhanced Liquid Glass Subtitle */}
-            <div className="hero-subtitle inline-flex items-center gap-3 liquid-glass animate-liquid px-6 py-4 rounded-2xl mb-8">
-              <Cpu className="w-6 h-6 text-violet-300 animate-pulse" />
-              <span className="text-lg font-medium bg-gradient-to-r from-violet-200 to-fuchsia-200 bg-clip-text text-transparent">
+            {/* Mickey Speech Bubble */}
+            <div className="mickey-speech-bubble p-8 mb-8">
+              <Sparkles className="w-8 h-8 text-yellow-400 mx-auto mb-4 bounce-element" />
+              <h1 className="text-5xl md:text-7xl font-black mb-4">
+                <span className="bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
+                  MUHAMMAD HAZIM
+                </span>
+              </h1>
+              <div className="text-2xl font-bold text-yellow-200 mb-4">
                 Mechanical & Software Engineer
-              </span>
-              <Wrench className="w-6 h-6 text-fuchsia-300 animate-pulse" />
+              </div>
             </div>
 
             <div className="max-w-2xl mx-auto lg:mx-0">
@@ -1325,67 +1060,87 @@ export default function Portfolio() {
                   <a
                     key={i}
                     href={item.href}
-                    className="dark-glass px-4 py-3 rounded-full flex items-center gap-2 text-slate-300 hover:text-violet-400 transition-all duration-300 magnetic-button group"
+                    className="mickey-button px-4 py-3 rounded-full flex items-center gap-2"
                   >
-                    <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm">{item.text}</span>
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-sm font-black">{item.text}</span>
                   </a>
                 ))}
               </div>
               
-              <p className="text-xl text-slate-250 mb-12 leading-relaxed hero-subtitle">
+              <p className="text-xl text-gray-300 mb-8 leading-relaxed font-bold">
                 Creating{' '}
                 <span className="inline-block text-left">
-                  <span className="font-bold text-3xl bg-gradient-to-r from-purple-200 to-fuchsia-400 bg-clip-text text-transparent">
+                  <span className="font-black text-3xl bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
                     {currentText}
                   </span>
-                  <span className="typing-cursor font-semibold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">|</span>
+                  <span className="typing-cursor font-black text-3xl bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">|</span>
                 </span>
-                {' '}solutions that bridge innovation and excellence.
+                {' '}solutions with magic! ✨
               </p>
               
-              <div className="hero-buttons flex gap-4 justify-center lg:justify-start">
+              <div className="flex gap-4 justify-center lg:justify-start">
                 <button onClick={scrollToProjects} 
-                className="magnetic-button px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full font-semibold hover:shadow-2xl hover:shadow-violet-500/30 transition-all duration-300 hover:scale-105 animate-glow">
-                  View Projects
+                className="mickey-button px-8 py-4 rounded-2xl text-lg font-black">
+                  🎨 View Projects
                 </button>
                 <button onClick={scrollToContact}
-                className="magnetic-button dark-glass px-8 py-4 rounded-full font-semibold hover:text-violet-400 transition-all duration-300">
-                  Get in Touch
+                className="mickey-button px-8 py-4 rounded-2xl text-lg font-black"
+                style={{ background: 'linear-gradient(45deg, #FFD700, #FFA500)' }}>
+                  💌 Get in Touch
                 </button>
               </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex justify-center lg:justify-start gap-6 mt-8">
+              {[
+                { icon: Github, href: 'https://github.com' },
+                { icon: Linkedin, href: 'https://linkedin.com/in/muhammad-hazim-hishamuddin-bin-hishamuddin-71234212b' }
+              ].map((social, index) => (
+                <div key={index} className="floating-element" style={{ animationDelay: `${index * 0.5}s` }}>
+                  <a 
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mickey-border p-4 rounded-full block hover:scale-110 transition-transform"
+                  >
+                    <social.icon className="w-6 h-6 text-white" />
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
         </div>
         
-        <ChevronDown className="absolute bottom-8 w-8 h-8 text-violet-400 animate-bounce mx-auto left-0 right-0" />
+        <ChevronDown className="absolute bottom-8 w-8 h-8 text-yellow-400 bounce-element mx-auto left-0 right-0" />
       </section>
 
       {/* About Section */}
-      <section ref={aboutRef} data-section="about" className="about-section py-32 px-6 relative">
+      <section ref={aboutRef} data-section="about" className="py-20 px-6 relative z-10">
         {visibleSections.about ? (
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-5xl font-bold mb-16 text-center">
-              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                About Me
+            <h2 className="text-4xl md:text-6xl font-black text-center mb-16">
+              <span className="bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
+                ABOUT ME 🎯
               </span>
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
-                  <Code className="w-12 h-12 text-violet-400 mb-4 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-2xl font-bold mb-4 text-white">Software Engineering</h3>
-                  <p className="text-slate-400 leading-relaxed">
+                <div className="mickey-card rounded-3xl p-8 h-full text-center">
+                  <Code className="w-16 h-16 text-red-400 mx-auto mb-4 bounce-element" />
+                  <h3 className="text-2xl font-black mb-4 text-white">Software Engineering</h3>
+                  <p className="text-gray-300 leading-relaxed font-bold">
                     Experienced in full-stack development and embedded systems. 
                     I build scalable applications and intelligent systems that solve real-world problems.
                   </p>
                 </div>
               </div>
               <div>
-                <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
-                  <Wrench className="w-12 h-12 text-fuchsia-400 mb-4 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-2xl font-bold mb-4 text-white">Mechanical Engineering</h3>
-                  <p className="text-slate-400 leading-relaxed">
+                <div className="mickey-card rounded-3xl p-8 h-full text-center">
+                  <Wrench className="w-16 h-16 text-yellow-400 mx-auto mb-4 bounce-element" />
+                  <h3 className="text-2xl font-black mb-4 text-white">Mechanical Engineering</h3>
+                  <p className="text-gray-300 leading-relaxed font-bold">
                     Apply core mechanical engineering principles in the design, analysis, and improvement of systems and processes to enhance performance, reliability, and efficiency.
                   </p>
                 </div>
@@ -1398,37 +1153,35 @@ export default function Portfolio() {
       </section>
 
       {/* Skills Section */}
-      <section ref={skillsRef} data-section="skills" className="skills-section py-32 px-6 relative">
+      <section ref={skillsRef} data-section="skills" className="py-20 px-6 relative z-10">
         {visibleSections.skills ? (
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-5xl font-bold mb-16 text-center">
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                Skills & Expertise
+            <h2 className="text-4xl md:text-6xl font-black text-center mb-16">
+              <span className="bg-gradient-to-r from-yellow-400 to-red-400 bg-clip-text text-transparent">
+                SKILLS & EXPERTISE 🛠️
               </span>
             </h2>
             
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { title: 'Software Development', skills: skills.software, color: 'violet' },
-                { title: 'Mechanical Engineering', skills: skills.mechanical, color: 'fuchsia' },
-                { title: 'Other Tools/Hardware', skills: skills.tools, color: 'fuchsia' },
+                { title: 'Software Development', skills: skills.software, gradient: 'from-red-500 to-red-600', emoji: '💻' },
+                { title: 'Mechanical Engineering', skills: skills.mechanical, gradient: 'from-yellow-500 to-yellow-600', emoji: '⚙️' },
+                { title: 'Tools & Hardware', skills: skills.tools, gradient: 'from-red-500 to-yellow-500', emoji: '🔧' },
               ].map((category, index) => (
-                <div key={index} className="skill-card">
-                  <div className="dark-glass rounded-3xl p-8 transition-all duration-500 h-full hover:scale-105 group">
-                    <h3 className={`text-2xl font-bold mb-6 text-${category.color}-400`}>
-                      {category.title}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {category.skills.map((skill, i) => (
-                        <span 
-                          key={i} 
-                          className="dark-glass px-4 py-2 rounded-full text-sm text-slate-300 hover:bg-white/10 transition-all duration-300 hover:scale-105"
-                          style={{ animationDelay: `${i * 0.1}s` }}
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
+                <div key={index} className="mickey-card rounded-3xl p-8 text-center">
+                  <div className={`w-20 h-20 bg-gradient-to-r ${category.gradient} mickey-border rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    <span className="text-2xl">{category.emoji}</span>
+                  </div>
+                  <h3 className="text-2xl font-black mb-6 text-white">{category.title}</h3>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {category.skills.map((skill, i) => (
+                      <span 
+                        key={i} 
+                        className="mickey-dotted-border px-4 py-2 rounded-full text-sm font-bold"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -1440,18 +1193,17 @@ export default function Portfolio() {
       </section>
 
       {/* Work Experience Section */}
-      <section ref={experienceRef} data-section="experience" className="py-32 px-6 relative">
+      <section ref={experienceRef} data-section="experience" className="py-20 px-6 relative z-10">
         {visibleSections.experience ? (
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-5xl font-bold mb-16 text-center">
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                Work Experience
+            <h2 className="text-4xl md:text-6xl font-black text-center mb-16">
+              <span className="bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
+                WORK EXPERIENCE 💼
               </span>
             </h2>
             
             <div className="relative" ref={timelineRef}>
-              {/* Enhanced Timeline Line */}
-              <div className="absolute left-8 top-0 bottom-0 w-1 timeline-line rounded-full transform origin-top transition-all duration-1000 ease-out" 
+              <div className="absolute left-8 top-0 bottom-0 w-3 mickey-timeline-line rounded-full" 
                    style={{ transform: `scaleY(${timelineHeight / 100})` }} />
               
               <div className="space-y-16">
@@ -1462,76 +1214,47 @@ export default function Portfolio() {
                     <div 
                       key={i} 
                       ref={el => {timelineItemsRef.current[i] = el}}
-                      className="relative pl-20 timeline-item group"
+                      className="relative pl-20"
                     >
-                      {/* Enhanced Timeline Dot */}
                       <div 
-                        className={`absolute left-6 top-8 w-6 h-6 rounded-full timeline-dot ${colorClasses.dot} border-2 border-slate-900 transition-all duration-500 group-hover:scale-125 group-hover:animate-pulse`}
-                        style={{ 
-                          color: exp.color === 'violet' ? '#8b5cf6' : 
-                                exp.color === 'fuchsia' ? '#d946ef' : '#06b6d4'
-                        }}
+                        className={`absolute left-6 top-8 w-8 h-8 rounded-full mickey-timeline-dot ${colorClasses.dot}`}
                       />
                       
-                      {/* Enhanced Content Card */}
-                      <div 
-                        className={`dark-glass rounded-3xl p-8 transition-all duration-500 hover:scale-[1.02] relative overflow-hidden group/card bg-gradient-to-br ${colorClasses.gradient}`}
-                      >
-                        {/* Animated gradient overlay */}
-                        <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/5 to-transparent" />
+                      <div className="mickey-card rounded-3xl p-8">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Briefcase className={`w-6 h-6 ${colorClasses.text}`} />
+                              <h3 className="text-2xl font-black text-white">{exp.position}</h3>
+                            </div>
+                            <div className={`text-xl font-black mb-4 inline-block px-4 py-2 rounded-full mickey-border ${colorClasses.text} bg-gray-900`}>
+                              {exp.company}
+                            </div>
+                            <p className="text-gray-300 mb-6 leading-relaxed font-bold">{exp.description}</p>
+                          </div>
+                          <div className="md:ml-8 md:text-right flex-shrink-0 space-y-2">
+                            <div className="mickey-button px-4 py-2 rounded-full inline-flex items-center gap-2 text-sm">
+                              <Calendar className="w-4 h-4" />
+                              <span className="font-black">{exp.duration}</span>
+                            </div>
+                            <div className="mickey-button px-4 py-2 rounded-full inline-flex items-center gap-2 text-sm"
+                                 style={{ background: 'linear-gradient(45deg, #FFD700, #FFA500)' }}>
+                              <MapPinIcon className="w-4 h-4" />
+                              <span className="font-black">{exp.location}</span>
+                            </div>
+                          </div>
+                        </div>
                         
-                        <div className="relative z-10">
-                          <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <Briefcase 
-                                  className={`w-6 h-6 ${colorClasses.text} transition-transform duration-300 group-hover:scale-110`}
-                                />
-                                <h3 className="text-2xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
-                                  {exp.position}
-                                </h3>
-                              </div>
-                              <div 
-                                className={`text-xl font-semibold mb-4 inline-block px-4 py-2 rounded-full dark-glass ${colorClasses.text} border ${colorClasses.glow} transition-all duration-300 group-hover:scale-105`}
-                              >
-                                {exp.company}
-                              </div>
-                              <p className="text-slate-400 mb-6 leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
-                                {exp.description}
-                              </p>
-                            </div>
-                            <div className="md:ml-8 md:text-right flex-shrink-0 space-y-2">
-                              <div className="dark-glass px-4 py-2 rounded-full inline-flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
-                                <Calendar className="w-4 h-4" />
-                                <span className="text-sm font-medium">{exp.duration}</span>
-                              </div>
-                              <div className="dark-glass px-4 py-2 rounded-full inline-flex items-center gap-2 text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
-                                <MapPinIcon className="w-4 h-4" />
-                                <span className="text-sm">{exp.location}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-8 pt-6 border-t border-slate-700/50">
-                            <h4 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wide group-hover:text-slate-400 transition-colors duration-300">
-                              Key Achievements
-                            </h4>
-                            <ul className="space-y-3">
-                              {exp.achievements.map((achievement, j) => (
-                                <li 
-                                  key={j} 
-                                  className="flex items-start gap-3 achievement-item group/achievement"
-                                >
-                                  <div 
-                                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 transition-all duration-300 group-hover/achievement:scale-150 ${colorClasses.dot}`}
-                                  />
-                                  <span className="text-slate-400 leading-relaxed group-hover/achievement:text-slate-300 transition-all duration-300 group-hover/achievement:translate-x-1">
-                                    {achievement}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                        <div className="mt-8 pt-6 border-t-2 border-dashed border-yellow-400">
+                          <h4 className="text-sm font-black text-yellow-400 mb-4 uppercase tracking-wide">KEY ACHIEVEMENTS</h4>
+                          <ul className="space-y-3">
+                            {exp.achievements.map((achievement, j) => (
+                              <li key={j} className="flex items-start gap-3">
+                                <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${colorClasses.dot} mickey-timeline-dot`} />
+                                <span className="text-gray-300 leading-relaxed font-bold">{achievement}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     </div>
@@ -1546,46 +1269,60 @@ export default function Portfolio() {
       </section>
 
       {/* Projects Section */}
-      <section ref={projectsRef} data-section="projects" className="projects-section py-32 px-6 relative">
+      <section ref={projectsRef} data-section="projects" className="py-20 px-6 relative z-10">
         {visibleSections.projects ? (
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-5xl font-bold mb-16 text-center">
-              <span className="bg-gradient-to-r from-fuchsia-400 to-purple-400 bg-clip-text text-transparent">
-                Featured Projects
+            <h2 className="text-4xl md:text-6xl font-black text-center mb-16">
+              <span className="bg-gradient-to-r from-yellow-400 to-red-400 bg-clip-text text-transparent">
+                FEATURED PROJECTS 🚀
               </span>
             </h2>
             
             <div className="grid md:grid-cols-2 gap-8">
-              {projects.map((project, i) => (
-                <div key={i} className="project-card">
-                  <div className={`dark-glass bg-gradient-to-br ${project.gradient} rounded-3xl p-8 transition-all duration-500 hover:scale-105 h-full flex flex-col group`}>
-                    {/* Project Content - At the top */}
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="text-sm text-violet-400 mb-2 font-medium">{project.category}</div>
-                          <h3 className="text-2xl font-bold text-white">{project.title}</h3>
-                        </div>
-                        <ExternalLink className="w-5 h-5 text-slate-400 hover:text-violet-400 transition-colors cursor-pointer group-hover:scale-110" />
-                      </div>
-                      <p className="text-slate-400 mb-6 leading-relaxed">{project.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tech.map((tech, j) => (
-                          <span key={j} className="dark-glass px-3 py-1 rounded-full text-xs text-slate-300 hover:scale-105 transition-transform">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
+              {projects.map((project, index) => (
+                <div key={index} className="mickey-card rounded-3xl p-6 flex flex-col h-full min-h-[550px]">
+                  {/* Header Content */}
+                  <div className="flex-grow-0">
+                    <div className={`w-16 h-16 bg-gradient-to-r ${project.gradient} mickey-border rounded-full flex items-center justify-center mx-auto mb-4`}>
+                      <span className="text-2xl">
+                        {project.title.includes('Voice') ? '🎤' : 
+                         project.title.includes('Face') ? '👁️' : 
+                         project.title.includes('Auth') ? '🔐' : 
+                         project.title.includes('AI') ? '🤖' : '🎮'}
+                      </span>
                     </div>
+                    <h3 className="text-2xl font-black text-center mb-3 text-white">{project.title}</h3>
+                    <p className="text-gray-300 text-center mb-4 font-bold">{project.description}</p>
+                    
+                    {/* Tech Stack */}
+                    <div className="flex flex-wrap gap-2 justify-center mb-4">
+                      {project.tech.map((tech, i) => (
+                        <span key={i} className="mickey-dotted-border px-3 py-1 rounded-full text-xs font-black">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
 
-                    {/* Media Section - At the bottom */}
-                    <div className="mt-8">
+                  {/* Bottom Section - Fixed Position */}
+                  <div className="mt-auto">
+                    {/* Project Media */}
+                    <div className="mb-4">
                       <ProjectMediaSection 
                         media={project.media} 
                         projectTitle={project.title}
                         onMediaClick={(index) => openMediaModal(project.media, index)}
                       />
                     </div>
+                    
+                    {/* Button - Always at bottom */}
+                    <button 
+                      onClick={() => openMediaModal(project.media, 0)}
+                      className="mickey-button w-full py-3 rounded-xl text-sm font-black mt-4"
+                      disabled={project.media.length === 0}
+                    >
+                      {project.media.length === 0 ? 'NO VIDEOS 😢' : 'WATCH DEMO! 🎬'}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1597,117 +1334,81 @@ export default function Portfolio() {
       </section>
 
       {/* Contact Section */}
-      <section ref={contactRef} data-section="contact" className="py-32 px-6 relative">
+      <section ref={contactRef} data-section="contact" className="py-20 px-6 relative z-10">
         {visibleSections.contact ? (
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-5xl font-bold mb-8 text-center">
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                Let's Connect
+            <h2 className="text-4xl md:text-6xl font-black text-center mb-16">
+              <span className="bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
+                LET'S CONNECT! 💬
               </span>
             </h2>
-            <p className="text-xl text-slate-400 mb-12 text-center">
-              Interested in collaboration or have a project in mind? Let's talk!
-            </p>
-
-            {/* Contact Info */}
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-              {[
-                { icon: Mail, label: 'Email', value: 'muhammadhazim57@gmail.com',  href: 'https://mail.google.com/mail/?view=cm&to=muhammadhazim57@gmail.com', color: 'violet' },
-                { icon: Phone, label: 'Phone', value: '+60 14-5197269', href: 'https://wa.me/60145197269', color: 'fuchsia' },
-                { icon: MapPin, label: 'Location', value: 'Penang, Malaysia', color: 'cyan' }
-              ].map((item, i) => (
-                <a
-                  key={i}
-                  href={item.href}
-                  className="dark-glass flex flex-col items-center p-6 rounded-3xl transition-all duration-300 hover:scale-105 magnetic-button group"
-                >
-                  <item.icon className={`w-8 h-8 text-${item.color}-400 mb-3 group-hover:scale-110 transition-transform`} />
-                  <span className="text-sm text-slate-500 mb-1">{item.label}</span>
-                  <span className="text-slate-300 text-sm text-center">{item.value}</span>
-                </a>
-              ))}
-            </div>
-
-            {/* Contact Form */}
-            <div className="contact-form">
-              <div className="dark-glass rounded-3xl p-8">
-                <h3 className="text-2xl font-bold mb-6 text-center text-white">Send Me a Message</h3>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {[
-                    { id: 'name', label: 'Your Name', type: 'text', placeholder: 'Enter your name' },
-                    { id: 'email', label: 'Your Email', type: 'email', placeholder: 'your.email@example.com' },
-                    { id: 'message', label: 'Message', type: 'textarea', placeholder: 'Tell me about your project or inquiry...' }
-                  ].map((field) => (
-                    <div key={field.id}>
-                      <label htmlFor={field.id} className="block text-sm font-medium text-slate-400 mb-2">
-                        {field.label}
-                      </label>
-                      {field.type === 'textarea' ? (
-                        <textarea
-                          id={field.id}
-                          name={field.id}
-                          value={formData[field.id as keyof FormData]}
-                          onChange={handleChange}
-                          required
-                          rows={5}
-                          className="dark-glass w-full px-4 py-3 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-500 transition-all resize-none focus:ring-2 focus:ring-violet-500/50"
-                          placeholder={field.placeholder}
-                        />
-                      ) : (
-                        <input
-                          type={field.type}
-                          id={field.id}
-                          name={field.id}
-                          value={formData[field.id as keyof FormData]}
-                          onChange={handleChange}
-                          required
-                          className="dark-glass w-full px-4 py-3 rounded-2xl focus:outline-none text-slate-100 placeholder-slate-500 transition-all focus:ring-2 focus:ring-violet-500/50"
-                          placeholder={field.placeholder}
-                        />
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="submit"
-                    disabled={formStatus === 'sending'}
-                    className="w-full px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full font-semibold hover:shadow-lg hover:shadow-violet-500/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 animate-glow"
-                  >
-                    {formStatus === 'sending' ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending...
-                      </>
-                    ) : formStatus === 'sent' ? (
-                      <>
-                        <span>✓</span> Message Sent!
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-5 h-5" />
-                        Send Message
-                      </>
-                    )}
-                  </button>
-                </form>
+            
+            <div className="mickey-border-thick rounded-3xl p-8">
+              <div className="text-center mb-8">
+                <Zap className="w-16 h-16 text-yellow-400 mx-auto mb-4 pulse-glow" />
+                <p className="text-xl font-black text-white">
+                  Ready to create something magical together?
+                </p>
               </div>
-            </div>
-
-            {/* Social Links */}
-            <div className="flex gap-6 justify-center mt-12">
-              {[
-                { icon: Github, href: 'https://github.com', color: 'hover:text-violet-400' },
-                { icon: Linkedin, href: 'https://linkedin.com/in/muhammad-hazim-hishamuddin-bin-hishamuddin-71234212b', color: 'hover:text-cyan-400' }
-              ].map((social, i) => (
-                <a
-                  key={i}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`dark-glass p-4 rounded-2xl hover:scale-110 transition-all duration-300 ${social.color}`}
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Your Awesome Name"
+                    className="mickey-border rounded-2xl p-4 w-full font-black placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-500 bg-gray-800 text-white"
+                    required
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="your.email@super.cool"
+                    className="mickey-border rounded-2xl p-4 w-full font-black placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-500 bg-gray-800 text-white"
+                    required
+                  />
+                </div>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Tell me about your magical idea..."
+                  rows={5}
+                  className="mickey-border rounded-2xl p-4 w-full font-black placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-500 bg-gray-800 text-white resize-none"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={formStatus === 'sending'}
+                  className="mickey-button w-full py-4 rounded-2xl text-lg font-black disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(45deg, #FF0000, #CC0000)' }}
                 >
-                  <social.icon className="w-6 h-6" />
-                </a>
-              ))}
+                  {formStatus === 'sending' ? 'SENDING... ✨' : 
+                   formStatus === 'sent' ? 'MESSAGE SENT! 🎉' : 'SEND MESSAGE 🚀'}
+                </button>
+              </form>
+              
+              {/* Contact Info */}
+              <div className="flex flex-wrap justify-center gap-6 mt-8">
+                {[
+                  { icon: Mail, text: 'muhammadhazim57@gmail.com', color: 'text-red-400', href: 'https://mail.google.com/mail/?view=cm&to=muhammadhazim57@gmail.com' },
+                  { icon: Phone, text: '+60 14-5197269', color: 'text-yellow-400', href: 'https://wa.me/60145197269' },
+                  { icon: MapPin, text: 'Penang, Malaysia', color: 'text-white' }
+                ].map((item, index) => (
+                  <a
+                    key={index}
+                    href={item.href}
+                    className="flex items-center gap-2 font-black hover:scale-110 transition-transform text-white"
+                  >
+                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                    <span>{item.text}</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -1716,8 +1417,15 @@ export default function Portfolio() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-violet-900/50 text-center text-slate-500">
-        <p>© 2025 Muhammad Hazim Bin Hishamuddin. Built with React & Tailwind CSS</p>
+      <footer className="py-8 px-6 text-center relative z-10">
+        <div className="mickey-border rounded-2xl p-6 max-w-md mx-auto">
+          <div className="flex justify-center gap-4 mb-4">
+            <Heart className="w-6 h-6 text-red-400 bounce-element" />
+            <span className="font-black text-lg text-white">Imitates Cartoon Style</span>
+            <Heart className="w-6 h-6 text-yellow-400 bounce-element" style={{ animationDelay: '0.5s' }} />
+          </div>
+          <p className="text-gray-300 font-bold">© 2025 Muhammad Hazim - Full Stack Developer</p>
+        </div>
       </footer>
     </div>
   );
