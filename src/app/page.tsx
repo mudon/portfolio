@@ -1204,7 +1204,10 @@ export default function CartoonPortfolio() {
             
             <div className="relative" ref={timelineRef}>
               <div className="absolute left-8 top-0 bottom-0 w-3 mickey-timeline-line rounded-full" 
-                   style={{ transform: `scaleY(${timelineHeight / 100})` }} />
+                style={{ 
+                  transform: `scaleY(${timelineHeight / 100})`,
+                  transformOrigin: 'top' 
+                }} />
               
               <div className="space-y-16">
                 {experiences.map((exp, i) => {
