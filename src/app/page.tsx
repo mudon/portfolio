@@ -652,7 +652,7 @@ export default function CartoonPortfolio() {
       ]
     },
     {
-      title: 'Booking System Web - User\'s Ui',
+      title: 'Sports Booking System Web - User\'s Ui',
       category: 'Web',
       description: 'A responsive web interface for users to book sports facilities, view schedules, manage bookings, and interact with the system seamlessly through a clean and intuitive UI.',
       tech: ['Vite', 'Supabase'],
@@ -666,7 +666,7 @@ export default function CartoonPortfolio() {
       ]
     },
     {
-      title: 'Booking System Web - Admin Ui',
+      title: 'Sports Booking System Web - Admin Ui',
       category: 'Web',
       description: 'An admin dashboard for managing facilities, bookings, users, and availability, providing full control and real-time insights into system operations.',
       tech: ['Vite', 'Supabase'],
@@ -1416,10 +1416,15 @@ export default function CartoonPortfolio() {
                   <div className="flex-grow-0">
                     <div className={`w-16 h-16 bg-gradient-to-r ${project.gradient} mickey-border rounded-full flex items-center justify-center mx-auto mb-4`}>
                       <span className="text-2xl">
-                        {project.title.includes('Voice') ? '🎤' : 
-                         project.title.includes('Face') ? '👁️' : 
-                         project.title.includes('Auth') ? '🔐' : 
-                         project.title.includes('AI') ? '🤖' : '🎮'}
+                        { project.title.includes('Voice') ? '🎤' : 
+                          project.title.includes('Face') ? '👁️' : 
+                          project.title.includes('Auth') ? '🔐' : 
+                          project.title.includes('Sports Booking') ? '🏟️' :
+                          project.title.includes('User') ? '📅' :
+                          project.title.includes('Admin') ? '🛠️' :
+                          project.title.includes('POS') ? '💳' :
+                          project.title.includes('Freelancer') ? '💼' :
+                          project.title.includes('AI') ? '🤖' : '🎮'}
                       </span>
                     </div>
                     <h3 className="text-2xl font-black text-center mb-3 text-white">{project.title}</h3>
