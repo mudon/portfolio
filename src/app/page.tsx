@@ -638,6 +638,76 @@ export default function CartoonPortfolio() {
   // Update projects with Mickey Mouse colors
   const projects: Project[] = useMemo(() => [
     {
+      title: 'Sports Booking System - Flutter',
+      category: 'Flutter',
+      description: 'A mobile sports facility booking application that allows users to browse venues, schedule time slots, manage reservations, and handle real-time availability using a scalable backend.',
+      tech: ['Flutter', 'Supabase'],
+      gradient: 'from-sky-500 to-blue-600',
+      media: [
+        {
+          url: 'videos/booking-system-flutter-user.mp4',
+          alt: 'Booking system flutter',
+          type: 'video'
+        }
+      ]
+    },
+    {
+      title: 'Booking System Web - User\'s Ui',
+      category: 'Web',
+      description: 'A responsive web interface for users to book sports facilities, view schedules, manage bookings, and interact with the system seamlessly through a clean and intuitive UI.',
+      tech: ['Vite', 'Supabase'],
+      gradient: 'from-emerald-500 to-teal-600',
+      media: [
+        {
+          url: 'videos/booking-system-web-user.mp4',
+          alt: 'Booking system web (user view)',
+          type: 'video'
+        }
+      ]
+    },
+    {
+      title: 'Booking System Web - Admin Ui',
+      category: 'Web',
+      description: 'An admin dashboard for managing facilities, bookings, users, and availability, providing full control and real-time insights into system operations.',
+      tech: ['Vite', 'Supabase'],
+      gradient: 'from-indigo-500 to-purple-600',
+      media: [
+        {
+          url: 'videos/booking-system-web-admin.mp4',
+          alt: 'Booking system web (admin view)',
+          type: 'video'
+        }
+      ]
+    },
+    {
+      title: 'POS (point of sale) Management System',
+      category: 'Web',
+      description: 'A full-featured point of sale system designed to manage sales transactions, inventory, billing, and reports with a robust backend and efficient data handling.',
+      tech: ['Vite', 'Dotnet', 'C#', 'PostgreSQL'],
+      gradient: 'from-amber-500 to-orange-600',
+      media: [
+        {
+          url: 'videos/pos-management-system.mp4',
+          alt: 'POS system',
+          type: 'video'
+        }
+      ]
+    },
+    {
+      title: 'Freelancer Management System',
+      category: 'Web',
+      description: 'A web-based platform for managing freelancers, projects, payments, and performance tracking, enabling streamlined collaboration between clients and freelancers.',
+      tech: ['Vite', 'Spring Boot', 'Java', 'PostgreSQL'],
+      gradient: 'from-cyan-500 to-sky-600',
+      media: [
+        {
+          url: 'videos/freelancer-management-system.mp4',
+          alt: 'Freelancer management system',
+          type: 'video'
+        }
+      ]
+    },
+    {
       title: 'Voice-to-text (Whisper + Silero) with Gemini',
       category: 'Linux App',
       description: 'Developed an AI application that transcribes audio using Whisper and Silero for VAD, with the transcribed text fed into Gemini for analysis or responses.',
