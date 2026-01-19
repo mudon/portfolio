@@ -638,7 +638,7 @@ export default function CartoonPortfolio() {
   // Update projects with Mickey Mouse colors
   const projects: Project[] = useMemo(() => [
     {
-      title: 'Sports Booking System - Flutter',
+      title: 'Sports Booking System Mobile - Flutter',
       category: 'Flutter',
       description: 'A mobile sports facility booking application that allows users to browse venues, schedule time slots, manage reservations, and handle real-time availability using a scalable backend.',
       tech: ['Flutter', 'Supabase'],
